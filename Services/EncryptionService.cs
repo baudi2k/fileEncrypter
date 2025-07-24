@@ -69,10 +69,33 @@ namespace FileEncrypter.Services
             using var crypto = new CryptoStream(fsIn, aes.CreateDecryptor(), CryptoStreamMode.Read);
             using var reader = new BinaryReader(crypto, Encoding.UTF8, leaveOpen: true);
 
-            string originalName = reader.ReadString();
-            long totalBytes = reader.ReadInt64();
+            string originalName;
+            long totalBytes;
+            string outputPath;
 
-            string outputPath = Path.Combine(outputDirectory, originalName);
+            try
+            {
+                originalName = reader.ReadString();
+                totalBytes = reader.ReadInt64();
+
+                // Validar que el nombre del archivo no contenga caracteres inválidos
+                if (string.IsNullOrEmpty(originalName) || 
+                    originalName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+                    originalName.Contains('\0'))
+                {
+                    throw new CryptographicException("Contraseña incorrecta o archivo corrupto.");
+                }
+
+                outputPath = Path.Combine(outputDirectory, originalName);
+            }
+            catch (ArgumentException ex) when (ex.Message.Contains("path"))
+            {
+                throw new CryptographicException("Contraseña incorrecta o archivo corrupto.", ex);
+            }
+            catch (Exception ex) when (!(ex is OperationCanceledException))
+            {
+                throw new CryptographicException("Contraseña incorrecta o archivo corrupto.", ex);
+            }
             byte[] buffer = new byte[BufferSize];
             long writtenSoFar = 0;
 

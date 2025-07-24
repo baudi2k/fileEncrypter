@@ -24,7 +24,7 @@ namespace FileEncrypter
             var pwd = PasswordInput.Password;
             if (string.IsNullOrWhiteSpace(pwd))
             {
-                MessageBox.Show("Ingrese una contraseña.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                CustomMessageBox.ShowWarning("Por favor, ingrese una contraseña antes de continuar.", "Contraseña Requerida", this);
                 return;
             }
 
@@ -45,15 +45,15 @@ namespace FileEncrypter
             try
             {
                 await EncryptionService.EncryptFileAsync(input, output, pwd, progress, _cts.Token);
-                MessageBox.Show($"Encriptado correctamente:\n{output}", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                CustomMessageBox.ShowSuccess($"El archivo se ha encriptado correctamente.\n\nUbicación: {output}", "Encriptación Completada", this);
             }
             catch (OperationCanceledException)
             {
-                MessageBox.Show("Operación cancelada.", "Cancelado", MessageBoxButton.OK, MessageBoxImage.Information);
+                CustomMessageBox.ShowWarning("La operación de encriptación fue cancelada por el usuario.", "Operación Cancelada", this);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                CustomMessageBox.ShowError($"Ocurrió un error durante la encriptación:\n\n{ex.Message}", "Error de Encriptación", this);
             }
             finally
             {
@@ -69,7 +69,7 @@ namespace FileEncrypter
             var pwd = PasswordInput.Password;
             if (string.IsNullOrWhiteSpace(pwd))
             {
-                MessageBox.Show("Ingrese una contraseña.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                CustomMessageBox.ShowWarning("Por favor, ingrese una contraseña antes de continuar.", "Contraseña Requerida", this);
                 return;
             }
 
@@ -88,19 +88,19 @@ namespace FileEncrypter
             try
             {
                 var output = await EncryptionService.DecryptFileAsync(input, pwd, dir, progress, _cts.Token);
-                MessageBox.Show($"Desencriptado correctamente:\n{output}", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                CustomMessageBox.ShowSuccess($"El archivo se ha desencriptado correctamente.\n\nUbicación: {output}", "Desencriptación Completada", this);
             }
             catch (OperationCanceledException)
             {
-                MessageBox.Show("Operación cancelada.", "Cancelado", MessageBoxButton.OK, MessageBoxImage.Information);
+                CustomMessageBox.ShowWarning("La operación de desencriptación fue cancelada por el usuario.", "Operación Cancelada", this);
             }
             catch (CryptographicException)
             {
-                MessageBox.Show("Contraseña incorrecta.", "Error de autenticación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                CustomMessageBox.ShowPasswordError(this);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                CustomMessageBox.ShowError($"Ocurrió un error durante la desencriptación:\n\n{ex.Message}", "Error de Desencriptación", this);
             }
             finally
             {
