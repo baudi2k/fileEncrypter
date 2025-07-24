@@ -1,0 +1,67 @@
+# Archivos y carpetas generados por Visual Studio y WPF
+.vs/
+.vscode/
+.idea/
+.vspscc
+.vssscc
+.dbmdl
+.pdb
+.cache
+# Archivos de compilación
+bin/
+obj/
+[Bb]uild/
+[Bb]uilds/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Archivos de configuración local
+*.vspscc
+*.vssscc
+*.dbmdl
+*.pdb
+*.cache
+*.log
+
+# Archivos de paquetes NuGet
+*.nupkg
+*.snupkg
+packages/
+*.nuspec
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Archivos de configuración de entorno
+*.env
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de editor
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Archivos de publicación
+publish/
+*.publish.xml
+
+# Archivos de pruebas
+TestResults/
+*.TestResults
+*.trx
+
+# Otros archivos temporales
+_ReSharper*/
+*.resharper
+*.sln.ide
+*.orig
+*.tmp
+*.bak
+*.swp
+*.scc
