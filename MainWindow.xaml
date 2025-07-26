@@ -21,13 +21,218 @@
             <!-- Password Card -->
             <Border Style="{StaticResource Card}">
                 <StackPanel Style="{StaticResource InputContainer}">
-                    <TextBlock 
-                        Text="🔑 Contraseña" 
-                        Style="{StaticResource SectionTitle}"/>
-                    <PasswordBox 
-                        x:Name="PasswordInput" 
-                        Style="{StaticResource ModernPasswordBox}"
-                        ToolTip="Ingrese una contraseña segura"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBlock 
+                            Grid.Column="0"
+                            Text="🔑 Contraseña" 
+                            Style="{StaticResource SectionTitle}"/>
+                        
+                        <Button 
+                            Grid.Column="1"
+                            x:Name="ToggleGeneratorButton"
+                            Content="🎲 Generar"
+                            Style="{StaticResource SmallButton}"
+                            Click="ToggleGenerator_Click"
+                            VerticalAlignment="Center"
+                            Margin="0"/>
+                    </Grid>
+                    
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <PasswordBox 
+                            Grid.Column="0"
+                            x:Name="PasswordInput" 
+                            Style="{StaticResource ModernPasswordBox}"
+                            ToolTip="Ingrese una contraseña segura"
+                            PasswordChanged="PasswordInput_PasswordChanged"/>
+                        
+                        <Button 
+                            Grid.Column="1"
+                            x:Name="ShowPasswordButton"
+                            Content="👁️"
+                            Style="{StaticResource SmallButton}"
+                            Click="ShowPassword_Click"
+                            VerticalAlignment="Center"
+                            Margin="8,0,0,0"/>
+                    </Grid>
+
+                    <!-- Password Strength Indicator -->
+                    <StackPanel x:Name="StrengthIndicator" Margin="0,8,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <ProgressBar 
+                                x:Name="StrengthBar"
+                                Grid.Column="0"
+                                Height="4"
+                                Background="#FF374151"
+                                BorderThickness="0"
+                                Value="0"
+                                Maximum="100"/>
+                            
+                            <TextBlock 
+                                x:Name="StrengthText"
+                                Grid.Column="1"
+                                Text="Débil"
+                                FontSize="12"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Password Generator -->
+                    <Border x:Name="PasswordGenerator" 
+                            Style="{StaticResource PasswordGeneratorCard}" 
+                            Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock 
+                                Text="⚙️ Configuración del Generador" 
+                                FontSize="14" 
+                                FontWeight="SemiBold" 
+                                Foreground="{StaticResource OnSurfaceBrush}"
+                                Margin="0,0,0,12"/>
+
+                            <!-- Length Control -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBlock 
+                                    Grid.Column="0"
+                                    Text="Longitud:" 
+                                    Foreground="{StaticResource OnSurfaceBrush}"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,12,0"/>
+                                
+                                <Slider 
+                                    Grid.Column="1"
+                                    x:Name="LengthSlider"
+                                    Style="{StaticResource ModernSlider}"
+                                    Minimum="4"
+                                    Maximum="32"
+                                    Value="12"
+                                    IsSnapToTickEnabled="True"
+                                    TickFrequency="1"
+                                    ValueChanged="LengthSlider_ValueChanged"/>
+                                
+                                <TextBlock 
+                                    Grid.Column="2"
+                                    x:Name="LengthValue"
+                                    Text="12"
+                                    Foreground="{StaticResource AccentBrush}"
+                                    FontWeight="SemiBold"
+                                    VerticalAlignment="Center"
+                                    Margin="12,0,0,0"/>
+                            </Grid>
+
+                            <!-- Character Types -->
+                            <TextBlock 
+                                Text="Tipos de caracteres:"
+                                Foreground="{StaticResource OnSurfaceBrush}"
+                                FontSize="13"
+                                Margin="0,0,0,8"/>
+
+                            <StackPanel>
+                                <CheckBox 
+                                    x:Name="IncludeUppercase"
+                                    Content="Mayúsculas (A-Z)"
+                                    Style="{StaticResource ModernCheckBox}"
+                                    IsChecked="True"
+                                    Checked="CharacterType_Changed"
+                                    Unchecked="CharacterType_Changed"/>
+                                
+                                <CheckBox 
+                                    x:Name="IncludeLowercase"
+                                    Content="Minúsculas (a-z)"
+                                    Style="{StaticResource ModernCheckBox}"
+                                    IsChecked="True"
+                                    Checked="CharacterType_Changed"
+                                    Unchecked="CharacterType_Changed"/>
+                                
+                                <CheckBox 
+                                    x:Name="IncludeNumbers"
+                                    Content="Números (0-9)"
+                                    Style="{StaticResource ModernCheckBox}"
+                                    IsChecked="True"
+                                    Checked="CharacterType_Changed"
+                                    Unchecked="CharacterType_Changed"/>
+                                
+                                <CheckBox 
+                                    x:Name="IncludeSpecial"
+                                    Content="Caracteres especiales (!@#$%^&amp;*)"
+                                    Style="{StaticResource ModernCheckBox}"
+                                    IsChecked="True"
+                                    Checked="CharacterType_Changed"
+                                    Unchecked="CharacterType_Changed"/>
+                            </StackPanel>
+
+                            <!-- Generated Password Preview -->
+                            <Grid Margin="0,12,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBox 
+                                    Grid.Column="0"
+                                    x:Name="GeneratedPasswordPreview"
+                                    IsReadOnly="True"
+                                    Background="#FF374151"
+                                    Foreground="{StaticResource OnSurfaceBrush}"
+                                    BorderBrush="#FF4A4A4A"
+                                    BorderThickness="1"
+                                    Padding="8"
+                                    FontFamily="Consolas"
+                                    FontSize="12"
+                                    Text="Haz clic en 'Generar' para crear una contraseña"/>
+                                
+                                <Button 
+                                    Grid.Column="1"
+                                    Content="📋"
+                                    Style="{StaticResource SmallButton}"
+                                    Click="CopyPassword_Click"
+                                    ToolTip="Copiar al portapapeles"
+                                    Margin="8,0,0,0"/>
+                            </Grid>
+
+                            <!-- Generate and Apply Buttons -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <Button 
+                                    Grid.Column="0"
+                                    Content="🎲 Generar"
+                                    Style="{StaticResource AccentButton}"
+                                    Click="GeneratePassword_Click"
+                                    Margin="0,0,6,0"/>
+                                
+                                <Button 
+                                    Grid.Column="1"
+                                    Content="✅ Usar esta"
+                                    Style="{StaticResource AccentButton}"
+                                    Click="UseGeneratedPassword_Click"
+                                    Margin="6,0,0,0"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </Border>
 
@@ -111,13 +316,15 @@
                                 Text="📁" 
                                 FontSize="32" 
                                 HorizontalAlignment="Center" 
-                                Foreground="{StaticResource AccentBrush}"/>
+                                Foreground="{StaticResource AccentBrush}"
+                                Margin="0,0,0,8"/>
                             <TextBlock 
                                 Text="Arrastra archivos aquí" 
                                 FontSize="16" 
                                 FontWeight="SemiBold"
                                 HorizontalAlignment="Center" 
-                                Foreground="{StaticResource OnSurfaceBrush}"/>
+                                Foreground="{StaticResource OnSurfaceBrush}"
+                                Margin="0,0,0,8"/>
                             <TextBlock 
                                 Text="Archivos .enc se desencriptan automáticamente" 
                                 FontSize="12" 
@@ -144,12 +351,14 @@
                             Text="• Los archivos encriptados tendrán extensión .enc"
                             FontSize="13"
                             Foreground="#FFBFDBFE"
-                            TextWrapping="Wrap"/>
+                            TextWrapping="Wrap"
+                            Margin="0,0,0,4"/>
                         <TextBlock 
                             Text="• Usa contraseñas seguras para mejor protección"
                             FontSize="13"
                             Foreground="#FFBFDBFE"
-                            TextWrapping="Wrap"/>
+                            TextWrapping="Wrap"
+                            Margin="0,0,0,4"/>
                         <TextBlock 
                             Text="• Puedes arrastrar archivos directamente a la ventana"
                             FontSize="13"
