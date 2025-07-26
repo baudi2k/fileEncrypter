@@ -16,8 +16,11 @@ namespace FileEncrypter
     public partial class MainWindow : Window
     {
         private CancellationTokenSource? _cts;
-        private bool _isPasswordVisible = false;
-        private TextBox? _passwordTextBox;
+        private bool _isEncryptPasswordVisible = false;
+        private bool _isDecryptPasswordVisible = false;
+        private TextBox? _encryptPasswordTextBox;
+        private TextBox? _decryptPasswordTextBox;
+        private string _currentSection = "Encrypt"; // "Encrypt" or "Decrypt"
 
         public MainWindow()
         {
@@ -28,12 +31,12 @@ namespace FileEncrypter
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            UpdatePasswordStrength();
+            UpdateEncryptPasswordStrength();
         }
 
         private async void EncryptFile_Click(object sender, RoutedEventArgs e)
         {
-            var pwd = PasswordInput.Password;
+            var pwd = _isEncryptPasswordVisible ? (_encryptPasswordTextBox?.Text ?? "") : EncryptPasswordInput.Password;
             if (string.IsNullOrWhiteSpace(pwd))
             {
                 CustomMessageBox.ShowWarning("Por favor, ingrese una contraseña antes de continuar.", "Contraseña Requerida", this);
@@ -78,7 +81,7 @@ namespace FileEncrypter
 
         private async void DecryptFile_Click(object sender, RoutedEventArgs e)
         {
-            var pwd = PasswordInput.Password;
+            var pwd = _isDecryptPasswordVisible ? (_decryptPasswordTextBox?.Text ?? "") : DecryptPasswordInput.Password;
             if (string.IsNullOrWhiteSpace(pwd))
             {
                 CustomMessageBox.ShowWarning("Por favor, ingrese una contraseña antes de continuar.", "Contraseña Requerida", this);
@@ -170,23 +173,41 @@ namespace FileEncrypter
                 if (files.Length > 0)
                 {
                     string filePath = files[0]; // Procesar solo el primer archivo
+                    bool isEncFile = Path.GetExtension(filePath).ToLower() == ".enc";
 
-                    // Verificar contraseña
-                    var pwd = PasswordInput.Password;
-                    if (string.IsNullOrWhiteSpace(pwd))
+                    // Determinar qué contraseña usar según la sección actual
+                    string pwd;
+                    if (_currentSection == "Encrypt" && !isEncFile)
                     {
-                        CustomMessageBox.ShowWarning("Por favor, ingrese una contraseña antes de procesar el archivo.", "Contraseña Requerida", this);
-                        return;
+                        pwd = _isEncryptPasswordVisible ? (_encryptPasswordTextBox?.Text ?? "") : EncryptPasswordInput.Password;
+                        if (string.IsNullOrWhiteSpace(pwd))
+                        {
+                            CustomMessageBox.ShowWarning("Por favor, ingrese una contraseña de encriptación antes de procesar el archivo.", "Contraseña Requerida", this);
+                            return;
+                        }
+                        await ProcessEncryptFile(filePath, pwd);
                     }
-
-                    // Determinar operación basada en la extensión
-                    if (Path.GetExtension(filePath).ToLower() == ".enc")
+                    else if (_currentSection == "Decrypt" && isEncFile)
                     {
+                        pwd = _isDecryptPasswordVisible ? (_decryptPasswordTextBox?.Text ?? "") : DecryptPasswordInput.Password;
+                        if (string.IsNullOrWhiteSpace(pwd))
+                        {
+                            CustomMessageBox.ShowWarning("Por favor, ingrese una contraseña de desencriptación antes de procesar el archivo.", "Contraseña Requerida", this);
+                            return;
+                        }
                         await ProcessDecryptFile(filePath, pwd);
                     }
                     else
                     {
-                        await ProcessEncryptFile(filePath, pwd);
+                        // Archivo no corresponde a la sección actual
+                        if (isEncFile && _currentSection == "Encrypt")
+                        {
+                            CustomMessageBox.ShowWarning("Los archivos .enc deben ser arrastrados en la sección 'Desencriptar'.", "Archivo Incorrecto", this);
+                        }
+                        else if (!isEncFile && _currentSection == "Decrypt")
+                        {
+                            CustomMessageBox.ShowWarning("Para desencriptar, debe arrastrar archivos con extensión .enc.", "Archivo Incorrecto", this);
+                        }
                     }
                 }
             }
@@ -194,16 +215,34 @@ namespace FileEncrypter
 
         private void SetDropZoneHighlight(bool highlight)
         {
-            var rectangle = DropZone.Children.OfType<System.Windows.Shapes.Rectangle>().First();
-            if (highlight)
+            Grid? activeDropZone = null;
+            
+            // Determinar qué zona de drop está activa
+            if (_currentSection == "Encrypt" && EncryptDropZone != null)
             {
-                DropZone.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0x1A, 0x3B, 0x82, 0xF6));
-                rectangle.StrokeThickness = 3;
+                activeDropZone = EncryptDropZone;
             }
-            else
+            else if (_currentSection == "Decrypt" && DecryptDropZone != null)
             {
-                DropZone.Background = System.Windows.Media.Brushes.Transparent;
-                rectangle.StrokeThickness = 2;
+                activeDropZone = DecryptDropZone;
+            }
+
+            if (activeDropZone != null)
+            {
+                var rectangle = activeDropZone.Children.OfType<System.Windows.Shapes.Rectangle>().FirstOrDefault();
+                if (rectangle != null)
+                {
+                    if (highlight)
+                    {
+                        activeDropZone.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0x1A, 0x3B, 0x82, 0xF6));
+                        rectangle.StrokeThickness = 3;
+                    }
+                    else
+                    {
+                        activeDropZone.Background = System.Windows.Media.Brushes.Transparent;
+                        rectangle.StrokeThickness = 2;
+                    }
+                }
             }
         }
 
@@ -270,6 +309,42 @@ namespace FileEncrypter
 
         #endregion
 
+        #region Sidebar Navigation
+
+        private void EncryptNav_Click(object sender, RoutedEventArgs e)
+        {
+            if (EncryptNavButton == null || DecryptNavButton == null || 
+                EncryptSection == null || DecryptSection == null) return;
+
+            _currentSection = "Encrypt";
+            
+            // Update button styles
+            EncryptNavButton.Style = (Style)FindResource("SidebarButtonActive");
+            DecryptNavButton.Style = (Style)FindResource("SidebarButton");
+            
+            // Show/Hide sections
+            EncryptSection.Visibility = Visibility.Visible;
+            DecryptSection.Visibility = Visibility.Collapsed;
+        }
+
+        private void DecryptNav_Click(object sender, RoutedEventArgs e)
+        {
+            if (EncryptNavButton == null || DecryptNavButton == null || 
+                EncryptSection == null || DecryptSection == null) return;
+
+            _currentSection = "Decrypt";
+            
+            // Update button styles
+            EncryptNavButton.Style = (Style)FindResource("SidebarButton");
+            DecryptNavButton.Style = (Style)FindResource("SidebarButtonActive");
+            
+            // Show/Hide sections
+            EncryptSection.Visibility = Visibility.Collapsed;
+            DecryptSection.Visibility = Visibility.Visible;
+        }
+
+        #endregion
+
         #region Password Generator
 
         private void ToggleGenerator_Click(object sender, RoutedEventArgs e)
@@ -290,85 +365,158 @@ namespace FileEncrypter
             }
         }
 
-        private void PasswordInput_PasswordChanged(object sender, RoutedEventArgs e)
+        private void EncryptPasswordInput_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            UpdatePasswordStrength();
+            UpdateEncryptPasswordStrength();
         }
 
-        private void ShowPassword_Click(object sender, RoutedEventArgs e)
+        private void ShowEncryptPassword_Click(object sender, RoutedEventArgs e)
         {
-            if (PasswordInput == null || ShowPasswordButton == null)
+            if (EncryptPasswordInput == null || ShowEncryptPasswordButton == null)
                 return;
 
-            if (!_isPasswordVisible)
+            if (!_isEncryptPasswordVisible)
             {
                 // Crear TextBox para mostrar la contraseña
-                if (_passwordTextBox == null)
+                if (_encryptPasswordTextBox == null)
                 {
-                    _passwordTextBox = new TextBox
+                    _encryptPasswordTextBox = new TextBox
                     {
                         FontFamily = new FontFamily("Consolas"),
-                        ToolTip = PasswordInput.ToolTip
+                        ToolTip = EncryptPasswordInput.ToolTip
                     };
                     
                     // Aplicar el estilo correcto para TextBox
                     try
                     {
                         var textBoxStyle = (Style)FindResource("ModernTextBox");
-                        _passwordTextBox.Style = textBoxStyle;
+                        _encryptPasswordTextBox.Style = textBoxStyle;
                     }
                     catch (Exception)
                     {
                         // Si el estilo no se encuentra, aplicar propiedades manualmente
-                        _passwordTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF3A3A3A"));
+                        _encryptPasswordTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF3A3A3A"));
                         try
                         {
-                            _passwordTextBox.Foreground = (SolidColorBrush)FindResource("OnSurfaceBrush");
+                            _encryptPasswordTextBox.Foreground = (SolidColorBrush)FindResource("OnSurfaceBrush");
                         }
                         catch
                         {
-                            _passwordTextBox.Foreground = new SolidColorBrush(Colors.White);
+                            _encryptPasswordTextBox.Foreground = new SolidColorBrush(Colors.White);
                         }
-                        _passwordTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF4A4A4A"));
-                        _passwordTextBox.BorderThickness = new Thickness(1);
-                        _passwordTextBox.Padding = new Thickness(12, 10, 12, 10);
-                        _passwordTextBox.FontSize = 14;
+                        _encryptPasswordTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF4A4A4A"));
+                        _encryptPasswordTextBox.BorderThickness = new Thickness(1);
+                        _encryptPasswordTextBox.Padding = new Thickness(12, 10, 12, 10);
+                        _encryptPasswordTextBox.FontSize = 14;
                     }
                     
-                    Grid.SetColumn(_passwordTextBox, 0);
+                    Grid.SetColumn(_encryptPasswordTextBox, 0);
                     
                     // Agregar evento para actualizar fortaleza cuando se edite
-                    _passwordTextBox.TextChanged += (s, args) => UpdatePasswordStrength();
+                    _encryptPasswordTextBox.TextChanged += (s, args) => UpdateEncryptPasswordStrength();
                 }
 
-                _passwordTextBox.Text = PasswordInput.Password;
-                var parent = (Grid)PasswordInput.Parent;
+                _encryptPasswordTextBox.Text = EncryptPasswordInput.Password;
+                var parent = (Grid)EncryptPasswordInput.Parent;
                 if (parent != null)
                 {
-                    parent.Children.Remove(PasswordInput);
-                    parent.Children.Add(_passwordTextBox);
+                    parent.Children.Remove(EncryptPasswordInput);
+                    parent.Children.Add(_encryptPasswordTextBox);
                 }
                 
-                ShowPasswordButton.Content = "🙈";
-                _isPasswordVisible = true;
+                ShowEncryptPasswordButton.Content = "🙈";
+                _isEncryptPasswordVisible = true;
             }
             else
             {
                 // Volver al PasswordBox
-                if (_passwordTextBox != null)
+                if (_encryptPasswordTextBox != null)
                 {
-                    PasswordInput.Password = _passwordTextBox.Text ?? "";
-                    var parent = (Grid)_passwordTextBox.Parent;
+                    EncryptPasswordInput.Password = _encryptPasswordTextBox.Text ?? "";
+                    var parent = (Grid)_encryptPasswordTextBox.Parent;
                     if (parent != null)
                     {
-                        parent.Children.Remove(_passwordTextBox);
-                        parent.Children.Add(PasswordInput);
+                        parent.Children.Remove(_encryptPasswordTextBox);
+                        parent.Children.Add(EncryptPasswordInput);
                     }
                 }
                 
-                ShowPasswordButton.Content = "👁️";
-                _isPasswordVisible = false;
-                UpdatePasswordStrength(); // Actualizar después de cambiar de vuelta
+                ShowEncryptPasswordButton.Content = "👁️";
+                _isEncryptPasswordVisible = false;
+                UpdateEncryptPasswordStrength(); // Actualizar después de cambiar de vuelta
+            }
+        }
+
+        private void ShowDecryptPassword_Click(object sender, RoutedEventArgs e)
+        {
+            if (DecryptPasswordInput == null || ShowDecryptPasswordButton == null)
+                return;
+
+            if (!_isDecryptPasswordVisible)
+            {
+                // Crear TextBox para mostrar la contraseña
+                if (_decryptPasswordTextBox == null)
+                {
+                    _decryptPasswordTextBox = new TextBox
+                    {
+                        FontFamily = new FontFamily("Consolas"),
+                        ToolTip = DecryptPasswordInput.ToolTip
+                    };
+                    
+                    // Aplicar el estilo correcto para TextBox
+                    try
+                    {
+                        var textBoxStyle = (Style)FindResource("ModernTextBox");
+                        _decryptPasswordTextBox.Style = textBoxStyle;
+                    }
+                    catch (Exception)
+                    {
+                        // Si el estilo no se encuentra, aplicar propiedades manualmente
+                        _decryptPasswordTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF3A3A3A"));
+                        try
+                        {
+                            _decryptPasswordTextBox.Foreground = (SolidColorBrush)FindResource("OnSurfaceBrush");
+                        }
+                        catch
+                        {
+                            _decryptPasswordTextBox.Foreground = new SolidColorBrush(Colors.White);
+                        }
+                        _decryptPasswordTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF4A4A4A"));
+                        _decryptPasswordTextBox.BorderThickness = new Thickness(1);
+                        _decryptPasswordTextBox.Padding = new Thickness(12, 10, 12, 10);
+                        _decryptPasswordTextBox.FontSize = 14;
+                    }
+                    
+                    Grid.SetColumn(_decryptPasswordTextBox, 0);
+                }
+
+                _decryptPasswordTextBox.Text = DecryptPasswordInput.Password;
+                var parent = (Grid)DecryptPasswordInput.Parent;
+                if (parent != null)
+                {
+                    parent.Children.Remove(DecryptPasswordInput);
+                    parent.Children.Add(_decryptPasswordTextBox);
+                }
+                
+                ShowDecryptPasswordButton.Content = "🙈";
+                _isDecryptPasswordVisible = true;
+            }
+            else
+            {
+                // Volver al PasswordBox
+                if (_decryptPasswordTextBox != null)
+                {
+                    DecryptPasswordInput.Password = _decryptPasswordTextBox.Text ?? "";
+                    var parent = (Grid)_decryptPasswordTextBox.Parent;
+                    if (parent != null)
+                    {
+                        parent.Children.Remove(_decryptPasswordTextBox);
+                        parent.Children.Add(DecryptPasswordInput);
+                    }
+                }
+                
+                ShowDecryptPasswordButton.Content = "👁️";
+                _isDecryptPasswordVisible = false;
             }
         }
 
@@ -421,22 +569,22 @@ namespace FileEncrypter
 
         private void UseGeneratedPassword_Click(object sender, RoutedEventArgs e)
         {
-            if (GeneratedPasswordPreview == null || PasswordInput == null)
+            if (GeneratedPasswordPreview == null || EncryptPasswordInput == null)
                 return;
 
             if (!string.IsNullOrEmpty(GeneratedPasswordPreview.Text) && 
                 GeneratedPasswordPreview.Text != "Haz clic en 'Generar' para crear una contraseña")
             {
-                if (_isPasswordVisible && _passwordTextBox != null)
+                if (_isEncryptPasswordVisible && _encryptPasswordTextBox != null)
                 {
-                    _passwordTextBox.Text = GeneratedPasswordPreview.Text;
+                    _encryptPasswordTextBox.Text = GeneratedPasswordPreview.Text;
                 }
                 else
                 {
-                    PasswordInput.Password = GeneratedPasswordPreview.Text;
+                    EncryptPasswordInput.Password = GeneratedPasswordPreview.Text;
                 }
                 
-                UpdatePasswordStrength();
+                UpdateEncryptPasswordStrength();
                 CustomMessageBox.ShowSuccess("Contraseña aplicada correctamente.", "Éxito", this);
             }
             else
@@ -502,32 +650,32 @@ namespace FileEncrypter
             }
         }
 
-        private void UpdatePasswordStrength()
+        private void UpdateEncryptPasswordStrength()
         {
             // Verificar que los controles estén inicializados
-            if (PasswordInput == null || StrengthBar == null || StrengthText == null)
+            if (EncryptPasswordInput == null || EncryptStrengthBar == null || EncryptStrengthText == null)
                 return;
 
             try
             {
-                var password = _isPasswordVisible ? (_passwordTextBox?.Text ?? "") : PasswordInput.Password;
+                var password = _isEncryptPasswordVisible ? (_encryptPasswordTextBox?.Text ?? "") : EncryptPasswordInput.Password;
                 var strength = PasswordHelper.EvaluatePasswordStrength(password);
 
-                StrengthBar.Value = strength.Score;
-                StrengthText.Text = strength.Level;
+                EncryptStrengthBar.Value = strength.Score;
+                EncryptStrengthText.Text = strength.Level;
                 
                 // Actualizar color del texto
                 var colorBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(strength.Color));
-                StrengthText.Foreground = colorBrush;
+                EncryptStrengthText.Foreground = colorBrush;
                 
                 // Actualizar color de la barra de progreso
-                StrengthBar.Foreground = colorBrush;
+                EncryptStrengthBar.Foreground = colorBrush;
             }
             catch (Exception)
             {
                 // Si hay algún error, establecer valores predeterminados
-                if (StrengthBar != null) StrengthBar.Value = 0;
-                if (StrengthText != null) StrengthText.Text = "N/A";
+                if (EncryptStrengthBar != null) EncryptStrengthBar.Value = 0;
+                if (EncryptStrengthText != null) EncryptStrengthText.Text = "N/A";
             }
         }
 
