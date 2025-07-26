@@ -307,11 +307,38 @@ namespace FileEncrypter
                 {
                     _passwordTextBox = new TextBox
                     {
-                        Style = PasswordInput.Style,
                         FontFamily = new FontFamily("Consolas"),
                         ToolTip = PasswordInput.ToolTip
                     };
+                    
+                    // Aplicar el estilo correcto para TextBox
+                    try
+                    {
+                        var textBoxStyle = (Style)FindResource("ModernTextBox");
+                        _passwordTextBox.Style = textBoxStyle;
+                    }
+                    catch (Exception)
+                    {
+                        // Si el estilo no se encuentra, aplicar propiedades manualmente
+                        _passwordTextBox.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF3A3A3A"));
+                        try
+                        {
+                            _passwordTextBox.Foreground = (SolidColorBrush)FindResource("OnSurfaceBrush");
+                        }
+                        catch
+                        {
+                            _passwordTextBox.Foreground = new SolidColorBrush(Colors.White);
+                        }
+                        _passwordTextBox.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF4A4A4A"));
+                        _passwordTextBox.BorderThickness = new Thickness(1);
+                        _passwordTextBox.Padding = new Thickness(12, 10, 12, 10);
+                        _passwordTextBox.FontSize = 14;
+                    }
+                    
                     Grid.SetColumn(_passwordTextBox, 0);
+                    
+                    // Agregar evento para actualizar fortaleza cuando se edite
+                    _passwordTextBox.TextChanged += (s, args) => UpdatePasswordStrength();
                 }
 
                 _passwordTextBox.Text = PasswordInput.Password;
@@ -341,6 +368,7 @@ namespace FileEncrypter
                 
                 ShowPasswordButton.Content = "👁️";
                 _isPasswordVisible = false;
+                UpdatePasswordStrength(); // Actualizar después de cambiar de vuelta
             }
         }
 
