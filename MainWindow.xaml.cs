@@ -39,7 +39,7 @@ namespace FileEncrypter
 
             _cts = new CancellationTokenSource();
             ProgressBar.Value = 0;
-            ProgressBar.Visibility = Visibility.Visible;
+            ProgressSection.Visibility = Visibility.Visible;
             CancelButton.IsEnabled = true;
 
             var progress = new Progress<double>(pct => ProgressBar.Value = pct);
@@ -58,7 +58,7 @@ namespace FileEncrypter
             }
             finally
             {
-                ProgressBar.Visibility = Visibility.Collapsed;
+                ProgressSection.Visibility = Visibility.Collapsed;
                 CancelButton.IsEnabled = false;
                 _cts?.Dispose();
                 _cts = null;
@@ -82,7 +82,7 @@ namespace FileEncrypter
 
             _cts = new CancellationTokenSource();
             ProgressBar.Value = 0;
-            ProgressBar.Visibility = Visibility.Visible;
+            ProgressSection.Visibility = Visibility.Visible;
             CancelButton.IsEnabled = true;
 
             var progress = new Progress<double>(pct => ProgressBar.Value = pct);
@@ -105,7 +105,7 @@ namespace FileEncrypter
             }
             finally
             {
-                ProgressBar.Visibility = Visibility.Collapsed;
+                ProgressSection.Visibility = Visibility.Collapsed;
                 CancelButton.IsEnabled = false;
                 _cts?.Dispose();
                 _cts = null;
@@ -224,7 +224,7 @@ namespace FileEncrypter
         {
             _cts = new CancellationTokenSource();
             ProgressBar.Value = 0;
-            ProgressBar.Visibility = Visibility.Visible;
+            ProgressSection.Visibility = Visibility.Visible;
             CancelButton.IsEnabled = true;
 
             try
@@ -245,7 +245,7 @@ namespace FileEncrypter
             }
             finally
             {
-                ProgressBar.Visibility = Visibility.Collapsed;
+                ProgressSection.Visibility = Visibility.Collapsed;
                 CancelButton.IsEnabled = false;
                 _cts?.Dispose();
                 _cts = null;
