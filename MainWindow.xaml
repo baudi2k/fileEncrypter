@@ -349,30 +349,78 @@
                     <Border Style="{StaticResource Card}">
                         <StackPanel Style="{StaticResource InputContainer}">
                             <TextBlock 
-                                Text="🔑 Contraseña de Desencriptación" 
+                                Text="🔑 Método de Desencriptación" 
                                 Style="{StaticResource SectionTitle}"/>
                             
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
+                            <!-- Method Selection -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                <RadioButton 
+                                    x:Name="UsePasswordRadio"
+                                    Content="Usar Contraseña"
+                                    IsChecked="True"
+                                    Checked="DecryptionMethod_Changed"
+                                    Foreground="{StaticResource OnSurfaceBrush}"
+                                    FontSize="14"
+                                    Margin="0,0,24,0"/>
+                                <RadioButton 
+                                    x:Name="UseRecoveryPhraseRadio"
+                                    Content="Usar Frase de Recuperación"
+                                    Checked="DecryptionMethod_Changed"
+                                    Foreground="{StaticResource OnSurfaceBrush}"
+                                    FontSize="14"/>
+                            </StackPanel>
+
+                            <!-- Password Input -->
+                            <StackPanel x:Name="PasswordDecryptPanel">
+                                <TextBlock 
+                                    Text="Contraseña:" 
+                                    FontSize="14"
+                                    Foreground="{StaticResource OnSurfaceBrush}"
+                                    Margin="0,0,0,8"/>
                                 
-                                <PasswordBox 
-                                    Grid.Column="0"
-                                    x:Name="DecryptPasswordInput" 
-                                    Style="{StaticResource ModernPasswordBox}"
-                                    ToolTip="Ingrese la contraseña de desencriptación"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <PasswordBox 
+                                        Grid.Column="0"
+                                        x:Name="DecryptPasswordInput" 
+                                        Style="{StaticResource ModernPasswordBox}"
+                                        ToolTip="Ingrese la contraseña de desencriptación"/>
+                                    
+                                    <Button 
+                                        Grid.Column="1"
+                                        x:Name="ShowDecryptPasswordButton"
+                                        Content="👁️"
+                                        Style="{StaticResource SmallButton}"
+                                        Click="ShowDecryptPassword_Click"
+                                        VerticalAlignment="Center"
+                                        Margin="8,0,0,0"/>
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- Recovery Phrase Input -->
+                            <StackPanel x:Name="RecoveryPhraseDecryptPanel" Visibility="Collapsed">
+                                <TextBlock 
+                                    Text="Frase de Recuperación (12 palabras):" 
+                                    FontSize="14"
+                                    Foreground="{StaticResource OnSurfaceBrush}"
+                                    Margin="0,0,0,8"/>
                                 
-                                <Button 
-                                    Grid.Column="1"
-                                    x:Name="ShowDecryptPasswordButton"
-                                    Content="👁️"
-                                    Style="{StaticResource SmallButton}"
-                                    Click="ShowDecryptPassword_Click"
-                                    VerticalAlignment="Center"
-                                    Margin="8,0,0,0"/>
-                            </Grid>
+                                <TextBox 
+                                    x:Name="DecryptRecoveryPhraseInput"
+                                    Style="{StaticResource RecoveryPhraseInput}"
+                                    ToolTip="Ingrese las 12 palabras de la frase de recuperación separadas por espacios"
+                                    TextChanged="DecryptRecoveryPhrase_TextChanged"/>
+                                
+                                <TextBlock 
+                                    x:Name="RecoveryPhraseValidation"
+                                    Text="Ingrese las 12 palabras separadas por espacios"
+                                    Style="{StaticResource WarningText}"
+                                    Margin="0,4,0,0"/>
+                            </StackPanel>
                         </StackPanel>
                     </Border>
 
@@ -437,22 +485,54 @@
                         
                         <StackPanel>
                             <TextBlock 
+                                Text="🔐 Encriptación:"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Foreground="#FF60A5FA"
+                                Margin="0,0,0,4"/>
+                            <TextBlock 
                                 Text="• Los archivos encriptados tendrán extensión .enc"
                                 FontSize="13"
                                 Foreground="#FFBFDBFE"
                                 TextWrapping="Wrap"
-                                Margin="0,0,0,4"/>
+                                Margin="8,0,0,4"/>
+                            <TextBlock 
+                                Text="• Se genera automáticamente una frase de recuperación de 12 palabras"
+                                FontSize="13"
+                                Foreground="#FFBFDBFE"
+                                TextWrapping="Wrap"
+                                Margin="8,0,0,4"/>
                             <TextBlock 
                                 Text="• Usa contraseñas seguras para mejor protección"
                                 FontSize="13"
                                 Foreground="#FFBFDBFE"
                                 TextWrapping="Wrap"
+                                Margin="8,0,0,8"/>
+                            
+                            <TextBlock 
+                                Text="🔓 Desencriptación:"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Foreground="#FF60A5FA"
                                 Margin="0,0,0,4"/>
+                            <TextBlock 
+                                Text="• Puedes usar la contraseña original O la frase de recuperación"
+                                FontSize="13"
+                                Foreground="#FFBFDBFE"
+                                TextWrapping="Wrap"
+                                Margin="8,0,0,4"/>
+                            <TextBlock 
+                                Text="• La frase de recuperación es útil si olvidas la contraseña"
+                                FontSize="13"
+                                Foreground="#FFBFDBFE"
+                                TextWrapping="Wrap"
+                                Margin="8,0,0,4"/>
                             <TextBlock 
                                 Text="• Arrastra archivos directamente a las zonas correspondientes"
                                 FontSize="13"
                                 Foreground="#FFBFDBFE"
-                                TextWrapping="Wrap"/>
+                                TextWrapping="Wrap"
+                                Margin="8,0,0,0"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>

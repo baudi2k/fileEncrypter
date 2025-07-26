@@ -59,8 +59,14 @@ namespace FileEncrypter
             var progress = new Progress<double>(pct => ProgressBar.Value = pct);
             try
             {
-                await EncryptionService.EncryptFileAsync(input, output, pwd, progress, _cts.Token);
-                CustomMessageBox.ShowSuccess($"El archivo se ha encriptado correctamente.\n\nUbicación: {output}", "Encriptación Completada", this);
+                var result = await EncryptionService.EncryptFileWithRecoveryAsync(input, output, pwd, progress, _cts.Token);
+                
+                // Mostrar ventana de frase de recuperación
+                var recoveryWindow = new RecoveryPhraseWindow(result.RecoveryPhrase)
+                {
+                    Owner = this
+                };
+                recoveryWindow.ShowDialog();
             }
             catch (OperationCanceledException)
             {
@@ -81,11 +87,34 @@ namespace FileEncrypter
 
         private async void DecryptFile_Click(object sender, RoutedEventArgs e)
         {
-            var pwd = _isDecryptPasswordVisible ? (_decryptPasswordTextBox?.Text ?? "") : DecryptPasswordInput.Password;
-            if (string.IsNullOrWhiteSpace(pwd))
+            // Determinar método de desencriptación
+            bool usePassword = UsePasswordRadio?.IsChecked == true;
+            string? password = null;
+            string? recoveryPhrase = null;
+
+            if (usePassword)
             {
-                CustomMessageBox.ShowWarning("Por favor, ingrese una contraseña antes de continuar.", "Contraseña Requerida", this);
-                return;
+                password = _isDecryptPasswordVisible ? (_decryptPasswordTextBox?.Text ?? "") : DecryptPasswordInput.Password;
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    CustomMessageBox.ShowWarning("Por favor, ingrese una contraseña antes de continuar.", "Contraseña Requerida", this);
+                    return;
+                }
+            }
+            else
+            {
+                recoveryPhrase = DecryptRecoveryPhraseInput?.Text?.Trim();
+                if (string.IsNullOrWhiteSpace(recoveryPhrase))
+                {
+                    CustomMessageBox.ShowWarning("Por favor, ingrese la frase de recuperación antes de continuar.", "Frase de Recuperación Requerida", this);
+                    return;
+                }
+
+                if (!RecoveryPhraseHelper.ValidateRecoveryPhrase(recoveryPhrase))
+                {
+                    CustomMessageBox.ShowWarning("La frase de recuperación debe contener exactamente 12 palabras válidas.", "Frase de Recuperación Inválida", this);
+                    return;
+                }
             }
 
             var dlg = new OpenFileDialog { Filter = "Archivos (*.enc)|*.enc" };
@@ -102,16 +131,30 @@ namespace FileEncrypter
             var progress = new Progress<double>(pct => ProgressBar.Value = pct);
             try
             {
-                var output = await EncryptionService.DecryptFileAsync(input, pwd, dir, progress, _cts.Token);
-                CustomMessageBox.ShowSuccess($"El archivo se ha desencriptado correctamente.\n\nUbicación: {output}", "Desencriptación Completada", this);
+                var output = await EncryptionService.DecryptFileWithPasswordOrRecoveryAsync(
+                    input, password, recoveryPhrase, dir, progress, _cts.Token);
+                
+                var method = usePassword ? "contraseña" : "frase de recuperación";
+                CustomMessageBox.ShowSuccess($"El archivo se ha desencriptado correctamente usando {method}.\n\nUbicación: {output}", "Desencriptación Completada", this);
             }
             catch (OperationCanceledException)
             {
                 CustomMessageBox.ShowWarning("La operación de desencriptación fue cancelada por el usuario.", "Operación Cancelada", this);
             }
-            catch (CryptographicException)
+            catch (CryptographicException ex)
             {
-                CustomMessageBox.ShowPasswordError(this);
+                if (ex.Message.Contains("frase de recuperación"))
+                {
+                    CustomMessageBox.ShowError("Frase de recuperación incorrecta o archivo corrupto.", "Error de Desencriptación", this);
+                }
+                else if (ex.Message.Contains("no tiene frase de recuperación"))
+                {
+                    CustomMessageBox.ShowError("Este archivo fue encriptado con una versión anterior y no tiene frase de recuperación. Use la contraseña original.", "Sin Frase de Recuperación", this);
+                }
+                else
+                {
+                    CustomMessageBox.ShowPasswordError(this);
+                }
             }
             catch (Exception ex)
             {
@@ -248,15 +291,7 @@ namespace FileEncrypter
 
         private async Task ProcessEncryptFile(string inputPath, string password)
         {
-            var dir = Path.GetDirectoryName(inputPath) ?? Environment.CurrentDirectory;
-            var hashName = HashHelper.ComputeHash(Path.GetFileName(inputPath));
-            var output = Path.Combine(dir, hashName + ".enc");
-
-            await ExecuteFileOperation(async () =>
-            {
-                await EncryptionService.EncryptFileAsync(inputPath, output, password, GetProgressReporter(), _cts.Token);
-                CustomMessageBox.ShowSuccess($"El archivo se ha encriptado correctamente.\n\nUbicación: {output}", "Encriptación Completada", this);
-            });
+            await ProcessEncryptFileWithRecovery(inputPath, password);
         }
 
         private async Task ProcessDecryptFile(string inputPath, string password)
@@ -265,8 +300,8 @@ namespace FileEncrypter
 
             await ExecuteFileOperation(async () =>
             {
-                var output = await EncryptionService.DecryptFileAsync(inputPath, password, dir, GetProgressReporter(), _cts.Token);
-                CustomMessageBox.ShowSuccess($"El archivo se ha desencriptado correctamente.\n\nUbicación: {output}", "Desencriptación Completada", this);
+                var output = await EncryptionService.DecryptFileWithPasswordOrRecoveryAsync(inputPath, password, null, dir, GetProgressReporter(), _cts.Token);
+                CustomMessageBox.ShowSuccess($"El archivo se ha desencriptado correctamente usando contraseña.\n\nUbicación: {output}", "Desencriptación Completada", this);
             });
         }
 
@@ -677,6 +712,82 @@ namespace FileEncrypter
                 if (EncryptStrengthBar != null) EncryptStrengthBar.Value = 0;
                 if (EncryptStrengthText != null) EncryptStrengthText.Text = "N/A";
             }
+        }
+
+        #endregion
+
+        #region Recovery Phrase Interface
+
+        private void DecryptionMethod_Changed(object sender, RoutedEventArgs e)
+        {
+            if (PasswordDecryptPanel == null || RecoveryPhraseDecryptPanel == null) return;
+
+            bool usePassword = UsePasswordRadio?.IsChecked == true;
+            
+            PasswordDecryptPanel.Visibility = usePassword ? Visibility.Visible : Visibility.Collapsed;
+            RecoveryPhraseDecryptPanel.Visibility = usePassword ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private void DecryptRecoveryPhrase_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (DecryptRecoveryPhraseInput == null || RecoveryPhraseValidation == null) return;
+
+            var text = DecryptRecoveryPhraseInput.Text?.Trim();
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                RecoveryPhraseValidation.Text = "Ingrese las 12 palabras separadas por espacios";
+                RecoveryPhraseValidation.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFF59E0B"));
+                return;
+            }
+
+            var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            
+            if (words.Length < 12)
+            {
+                RecoveryPhraseValidation.Text = $"Faltan {12 - words.Length} palabras";
+                RecoveryPhraseValidation.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFEF4444"));
+            }
+            else if (words.Length > 12)
+            {
+                RecoveryPhraseValidation.Text = $"Demasiadas palabras ({words.Length}/12)";
+                RecoveryPhraseValidation.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFEF4444"));
+            }
+            else
+            {
+                // Exactamente 12 palabras, validar si son correctas
+                if (RecoveryPhraseHelper.ValidateRecoveryPhrase(text))
+                {
+                    RecoveryPhraseValidation.Text = "✅ Frase de recuperación válida";
+                    RecoveryPhraseValidation.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF10B981"));
+                }
+                else
+                {
+                    RecoveryPhraseValidation.Text = "❌ Una o más palabras no son válidas";
+                    RecoveryPhraseValidation.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFEF4444"));
+                }
+            }
+        }
+
+        private async Task ProcessEncryptFileWithRecovery(string inputPath, string password)
+        {
+            var dir = Path.GetDirectoryName(inputPath) ?? Environment.CurrentDirectory;
+            var hashName = HashHelper.ComputeHash(Path.GetFileName(inputPath));
+            var output = Path.Combine(dir, hashName + ".enc");
+
+            await ExecuteFileOperation(async () =>
+            {
+                var result = await EncryptionService.EncryptFileWithRecoveryAsync(inputPath, output, password, GetProgressReporter(), _cts.Token);
+                
+                // Mostrar ventana de frase de recuperación
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var recoveryWindow = new RecoveryPhraseWindow(result.RecoveryPhrase)
+                    {
+                        Owner = this
+                    };
+                    recoveryWindow.ShowDialog();
+                });
+            });
         }
 
         #endregion

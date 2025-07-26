@@ -1,0 +1,141 @@
+<Window x:Class="FileEncrypter.RecoveryPhraseWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="🔐 Frase de Recuperación Generada"
+        Width="600" Height="500"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource SurfaceBrush}"
+        ResizeMode="NoResize">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,24">
+            <TextBlock 
+                Text="✅ Archivo Encriptado Exitosamente"
+                FontSize="24"
+                FontWeight="Bold"
+                Foreground="#FF10B981"
+                HorizontalAlignment="Center"
+                Margin="0,0,0,16"/>
+            
+            <TextBlock 
+                Text="Se ha generado una frase de recuperación para este archivo"
+                FontSize="16"
+                Foreground="{StaticResource OnSurfaceBrush}"
+                HorizontalAlignment="Center"
+                TextWrapping="Wrap"
+                TextAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Recovery Phrase Display -->
+        <Border Grid.Row="1" Style="{StaticResource RecoveryPhraseCard}">
+            <StackPanel>
+                <TextBlock 
+                    Text="🔑 Tu Frase de Recuperación"
+                    FontSize="18"
+                    FontWeight="Bold"
+                    Foreground="#FF10B981"
+                    HorizontalAlignment="Center"
+                    Margin="0,0,0,16"/>
+
+                <TextBox 
+                    x:Name="RecoveryPhraseDisplay"
+                    Style="{StaticResource RecoveryPhraseDisplay}"
+                    Height="120"
+                    IsReadOnly="True"
+                    Margin="0,0,0,16"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <Button 
+                        Grid.Column="0"
+                        Content="📋 Copiar Frase"
+                        Style="{StaticResource SuccessButton}"
+                        Click="CopyRecoveryPhrase_Click"
+                        Margin="0,0,8,0"/>
+                    
+                    <Button 
+                        Grid.Column="1"
+                        Content="💾 Guardar en Archivo"
+                        Style="{StaticResource AccentButton}"
+                        Click="SaveRecoveryPhrase_Click"
+                        Margin="8,0,0,0"/>
+                </Grid>
+
+                <!-- Warning Section -->
+                <Border 
+                    Background="#FF3D1A00"
+                    BorderBrush="#FFF59E0B"
+                    BorderThickness="2"
+                    CornerRadius="8"
+                    Padding="16"
+                    Margin="0,16,0,0">
+                    <StackPanel>
+                        <TextBlock 
+                            Text="⚠️ IMPORTANTE - LEE CUIDADOSAMENTE"
+                            FontSize="14"
+                            FontWeight="Bold"
+                            Foreground="#FFF59E0B"
+                            HorizontalAlignment="Center"
+                            Margin="0,0,0,8"/>
+                        
+                        <TextBlock 
+                            TextWrapping="Wrap"
+                            Foreground="#FFFCD34D"
+                            FontSize="13"
+                            LineHeight="20">
+                            <Run Text="• "/>
+                            <Run Text="Guarda esta frase en un lugar SEGURO y PRIVADO" FontWeight="SemiBold"/>
+                            <LineBreak/>
+                            <Run Text="• Esta frase te permite recuperar el archivo si olvidas la contraseña"/>
+                            <LineBreak/>
+                            <Run Text="• Si pierdes tanto la contraseña como esta frase, "/>
+                            <Run Text="NO PODRÁS recuperar tu archivo" FontWeight="SemiBold"/>
+                            <LineBreak/>
+                            <Run Text="• Nunca compartas esta frase con nadie"/>
+                            <LineBreak/>
+                            <Run Text="• Considera escribirla en papel y guardarla en un lugar físico seguro"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- Buttons -->
+        <Grid Grid.Row="2" Margin="0,24,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <CheckBox 
+                Grid.Column="0"
+                x:Name="ConfirmationCheckBox"
+                Content="He guardado la frase de recuperación en un lugar seguro"
+                Foreground="{StaticResource OnSurfaceBrush}"
+                FontSize="14"
+                VerticalAlignment="Center"
+                Checked="ConfirmationCheckBox_Changed"
+                Unchecked="ConfirmationCheckBox_Changed"/>
+            
+            <Button 
+                Grid.Column="1"
+                x:Name="CloseButton"
+                Content="✅ Entendido, Cerrar"
+                Style="{StaticResource SuccessButton}"
+                Click="CloseButton_Click"
+                IsEnabled="False"
+                MinWidth="150"/>
+        </Grid>
+    </Grid>
+</Window> 
