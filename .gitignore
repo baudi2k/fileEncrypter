@@ -67,3 +67,5 @@ _ReSharper*/
 *.scc
 
 *.ps1
+*.exe
+*.nsi
