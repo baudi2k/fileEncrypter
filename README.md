@@ -2,7 +2,6 @@
 
 Una aplicación moderna y segura para encriptar archivos con AES-256, desarrollada en WPF con .NET 8. Protege tus archivos importantes con encriptación de nivel militar y un sistema de recuperación único basado en frases mnemónicas.
 
-![FileEncrypter Preview](https://via.placeholder.com/800x400/1a1a1a/3b82f6?text=FileEncrypter+Pro)
 
 ## ✨ Características Principales
 
