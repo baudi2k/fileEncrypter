@@ -65,3 +65,5 @@ _ReSharper*/
 *.bak
 *.swp
 *.scc
+
+*.ps1
