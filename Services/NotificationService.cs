@@ -104,21 +104,22 @@ namespace FileEncrypter.Services
         {
             var builder = new ToastContentBuilder()
                 .AddArgument("action", "encryptionComplete")
-                .AddText("🔒 Archivo Encriptado Exitosamente")
+                .AddText("Archivo Encriptado Exitosamente")
                 .AddText($"Archivo: {fileName}")
                 .AddText("Tu archivo ha sido protegido con encriptación AES-256")
-                .AddAppLogoOverride(GetAppIconUri(), ToastGenericAppLogoCrop.Circle)
-                .AddButton(new ToastButton()
-                    .SetContent("📂 Abrir Carpeta")
-                    .AddArgument("action", "openFolder")
-                    .AddArgument("folderPath", Path.GetDirectoryName(outputPath) ?? ""))
                 .SetToastScenario(ToastScenario.Default);
+
+            // Agregar botones
+            builder.AddButton(new ToastButton()
+                .SetContent("Abrir Carpeta")
+                .AddArgument("action", "openFolder")
+                .AddArgument("folderPath", Path.GetDirectoryName(outputPath) ?? ""));
 
             // Agregar botón para copiar frase de recuperación si está disponible
             if (!string.IsNullOrEmpty(recoveryPhrase))
             {
                 builder.AddButton(new ToastButton()
-                    .SetContent("🔑 Copiar Frase")
+                    .SetContent("Copiar Frase")
                     .AddArgument("action", "copyRecoveryPhrase")
                     .AddArgument("recoveryPhrase", recoveryPhrase)
                     .SetBackgroundActivation());
@@ -134,19 +135,21 @@ namespace FileEncrypter.Services
         {
             var builder = new ToastContentBuilder()
                 .AddArgument("action", "decryptionComplete")
-                .AddText("🔓 Archivo Desencriptado Exitosamente")
+                .AddText("Archivo Desencriptado Exitosamente")
                 .AddText($"Archivo: {fileName}")
                 .AddText("Tu archivo ha sido restaurado correctamente")
-                .AddAppLogoOverride(GetAppIconUri(), ToastGenericAppLogoCrop.Circle)
-                .AddButton(new ToastButton()
-                    .SetContent("📂 Abrir Carpeta")
-                    .AddArgument("action", "openFolder")
-                    .AddArgument("folderPath", Path.GetDirectoryName(outputPath) ?? ""))
-                .AddButton(new ToastButton()
-                    .SetContent("📄 Abrir Archivo")
-                    .AddArgument("action", "openFile")
-                    .AddArgument("filePath", outputPath))
                 .SetToastScenario(ToastScenario.Default);
+
+            // Agregar botones
+            builder.AddButton(new ToastButton()
+                .SetContent("Abrir Carpeta")
+                .AddArgument("action", "openFolder")
+                .AddArgument("folderPath", Path.GetDirectoryName(outputPath) ?? ""));
+
+            builder.AddButton(new ToastButton()
+                .SetContent("Abrir Archivo")
+                .AddArgument("action", "openFile")
+                .AddArgument("filePath", outputPath));
 
             ShowNotification(builder, "decryption-success", "completed", DEFAULT_EXPIRATION_MINUTES);
         }
@@ -160,15 +163,14 @@ namespace FileEncrypter.Services
             
             var builder = new ToastContentBuilder()
                 .AddArgument("action", "progressUpdate")
-                .AddText($"⏳ {operation} en Progreso")
+                .AddText($"{operation} en Progreso")
                 .AddText($"Archivo: {fileName}")
                 .AddProgressBar(
                     title: $"Procesando {fileName}...",
                     value: progressValue / 100.0,
                     isIndeterminate: false,
                     valueStringOverride: $"{progressValue:F1}%",
-                    status: $"Procesando...")
-                .AddAppLogoOverride(GetAppIconUri(), ToastGenericAppLogoCrop.Circle)
+                    status: "Procesando...")
                 .SetToastScenario(ToastScenario.Default);
 
             ShowNotification(builder, "operation-progress", "progress", 1);
@@ -203,10 +205,9 @@ namespace FileEncrypter.Services
         {
             var builder = new ToastContentBuilder()
                 .AddArgument("action", "error")
-                .AddText($"❌ {title}")
+                .AddText($"Error: {title}")
                 .AddText(message)
                 .AddText("Verifica la configuración e intenta nuevamente")
-                .AddAppLogoOverride(GetAppIconUri(), ToastGenericAppLogoCrop.Circle)
                 .SetToastScenario(ToastScenario.Alarm);
 
             ShowNotification(builder, "error", "errors", 5);
@@ -219,9 +220,8 @@ namespace FileEncrypter.Services
         {
             var builder = new ToastContentBuilder()
                 .AddArgument("action", "warning")
-                .AddText($"⚠️ {title}")
+                .AddText($"Advertencia: {title}")
                 .AddText(message)
-                .AddAppLogoOverride(GetAppIconUri(), ToastGenericAppLogoCrop.Circle)
                 .SetToastScenario(ToastScenario.Default);
 
             ShowNotification(builder, "warning", "warnings", 3);
@@ -234,9 +234,8 @@ namespace FileEncrypter.Services
         {
             var builder = new ToastContentBuilder()
                 .AddArgument("action", "info")
-                .AddText($"ℹ️ {title}")
+                .AddText($"Info: {title}")
                 .AddText(message)
-                .AddAppLogoOverride(GetAppIconUri(), ToastGenericAppLogoCrop.Circle)
                 .SetToastScenario(ToastScenario.Default);
 
             ShowNotification(builder, "info", "information", 2);
@@ -249,16 +248,16 @@ namespace FileEncrypter.Services
         {
             var builder = new ToastContentBuilder()
                 .AddArgument("action", "recoveryReminder")
-                .AddText("🔑 Frase de Recuperación Generada")
+                .AddText("Frase de Recuperación Generada")
                 .AddText("Se ha generado una frase de recuperación para tu archivo")
                 .AddText("¡Guárdala en un lugar seguro!")
-                .AddAppLogoOverride(GetAppIconUri(), ToastGenericAppLogoCrop.Circle)
-                .AddButton(new ToastButton()
-                    .SetContent("📋 Copiar Frase")
-                    .AddArgument("action", "copyRecoveryPhrase")
-                    .AddArgument("recoveryPhrase", recoveryPhrase)
-                    .SetBackgroundActivation())
                 .SetToastScenario(ToastScenario.Reminder);
+
+            builder.AddButton(new ToastButton()
+                .SetContent("Copiar Frase")
+                .AddArgument("action", "copyRecoveryPhrase")
+                .AddArgument("recoveryPhrase", recoveryPhrase)
+                .SetBackgroundActivation());
 
             ShowNotification(builder, "recovery-phrase", "security", 15);
         }
