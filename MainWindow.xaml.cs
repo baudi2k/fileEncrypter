@@ -59,22 +59,16 @@ namespace FileEncrypter
             var progress = new Progress<double>(pct => 
             {
                 ProgressBar.Value = pct;
-                // Actualizar notificación de progreso cada 10%
-                if (pct % 10 < 1)
-                {
-                    NotificationService.UpdateProgressNotification(Path.GetFileName(input), pct);
-                }
+                // Solo actualizar la barra de progreso local, sin notificaciones
             });
             
-            // Mostrar notificación de progreso inicial
-            NotificationService.ShowProgressNotification("Encriptación", Path.GetFileName(input), 0);
+            // No mostrar notificación de progreso inicial
             
             try
             {
                 var result = await EncryptionService.EncryptFileWithRecoveryAsync(input, output, pwd, progress, _cts.Token);
                 
-                // Limpiar notificación de progreso
-                NotificationService.ClearNotificationGroup("progress");
+                // No limpiar notificación de progreso (ya que no la mostramos)
                 
                 // Mostrar notificación de éxito
                 NotificationService.ShowEncryptionSuccess(Path.GetFileName(input), output, result.RecoveryPhrase);
@@ -91,13 +85,13 @@ namespace FileEncrypter
             }
             catch (OperationCanceledException)
             {
-                NotificationService.ClearNotificationGroup("progress");
+                // No limpiar notificación de progreso (ya que no la mostramos)
                 NotificationService.ShowWarning("Operación Cancelada", "La encriptación fue cancelada por el usuario.");
                 CustomMessageBox.ShowWarning("La operación de encriptación fue cancelada por el usuario.", "Operación Cancelada", this);
             }
             catch (Exception ex)
             {
-                NotificationService.ClearNotificationGroup("progress");
+                // No limpiar notificación de progreso (ya que no la mostramos)
                 NotificationService.ShowError("Error de Encriptación", $"Error procesando {Path.GetFileName(input)}: {ex.Message}");
                 CustomMessageBox.ShowError($"Ocurrió un error durante la encriptación:\n\n{ex.Message}", "Error de Encriptación", this);
             }
@@ -156,23 +150,17 @@ namespace FileEncrypter
             var progress = new Progress<double>(pct => 
             {
                 ProgressBar.Value = pct;
-                // Actualizar notificación de progreso cada 10%
-                if (pct % 10 < 1)
-                {
-                    NotificationService.UpdateProgressNotification(Path.GetFileName(input), pct);
-                }
+                // Solo actualizar la barra de progreso local, sin notificaciones
             });
             
-            // Mostrar notificación de progreso inicial
-            NotificationService.ShowProgressNotification("Desencriptación", Path.GetFileName(input), 0);
+            // No mostrar notificación de progreso inicial
             
             try
             {
                 var output = await EncryptionService.DecryptFileWithPasswordOrRecoveryAsync(
                     input, password, recoveryPhrase, dir, progress, _cts.Token);
                 
-                // Limpiar notificación de progreso
-                NotificationService.ClearNotificationGroup("progress");
+                // No limpiar notificación de progreso (ya que no la mostramos)
                 
                 // Mostrar notificación de éxito
                 NotificationService.ShowDecryptionSuccess(Path.GetFileName(output), output);
@@ -182,13 +170,13 @@ namespace FileEncrypter
             }
             catch (OperationCanceledException)
             {
-                NotificationService.ClearNotificationGroup("progress");
+                // No limpiar notificación de progreso (ya que no la mostramos)
                 NotificationService.ShowWarning("Operación Cancelada", "La desencriptación fue cancelada por el usuario.");
                 CustomMessageBox.ShowWarning("La operación de desencriptación fue cancelada por el usuario.", "Operación Cancelada", this);
             }
             catch (CryptographicException ex)
             {
-                NotificationService.ClearNotificationGroup("progress");
+                // No limpiar notificación de progreso (ya que no la mostramos)
                 
                 if (ex.Message.Contains("frase de recuperación"))
                 {
@@ -208,7 +196,7 @@ namespace FileEncrypter
             }
             catch (Exception ex)
             {
-                NotificationService.ClearNotificationGroup("progress");
+                // No limpiar notificación de progreso (ya que no la mostramos)
                 NotificationService.ShowError("Error de Desencriptación", $"Error procesando {Path.GetFileName(input)}: {ex.Message}");
                 CustomMessageBox.ShowError($"Ocurrió un error durante la desencriptación:\n\n{ex.Message}", "Error de Desencriptación", this);
             }
@@ -370,19 +358,19 @@ namespace FileEncrypter
             }
             catch (OperationCanceledException)
             {
-                NotificationService.ClearNotificationGroup("progress");
+                // No limpiar notificación de progreso (ya que no la mostramos)
                 NotificationService.ShowWarning("Operación Cancelada", "La operación fue cancelada por el usuario.");
                 CustomMessageBox.ShowWarning("La operación fue cancelada por el usuario.", "Operación Cancelada", this);
             }
             catch (CryptographicException)
             {
-                NotificationService.ClearNotificationGroup("progress");
+                // No limpiar notificación de progreso (ya que no la mostramos)
                 NotificationService.ShowError("Contraseña Incorrecta", "La contraseña proporcionada no es válida.");
                 CustomMessageBox.ShowPasswordError(this);
             }
             catch (Exception ex)
             {
-                NotificationService.ClearNotificationGroup("progress");
+                // No limpiar notificación de progreso (ya que no la mostramos)
                 NotificationService.ShowError("Error en Operación", $"Ocurrió un error: {ex.Message}");
                 CustomMessageBox.ShowError($"Ocurrió un error durante la operación:\n\n{ex.Message}", "Error", this);
             }
@@ -400,11 +388,7 @@ namespace FileEncrypter
             return new Progress<double>(pct => 
             {
                 ProgressBar.Value = pct;
-                // Actualizar notificación de progreso cada 10%
-                if (pct % 10 < 1)
-                {
-                    NotificationService.UpdateProgressNotification("Archivo", pct);
-                }
+                // Solo actualizar la barra de progreso local, sin notificaciones
             });
         }
 

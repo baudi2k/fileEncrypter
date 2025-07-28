@@ -362,8 +362,8 @@ namespace FileEncrypter.Services
         {
             try
             {
-                // Limpiar notificaciones de progreso al cerrar
-                ClearNotificationGroup("progress");
+                // Solo limpiar notificaciones de progreso si las hubiera 
+                // (ahora no las mostramos, pero por si acaso)
                 
                 // Opcional: limpiar todas las notificaciones al cerrar
                 // ClearAllNotifications();
