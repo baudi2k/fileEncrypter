@@ -56,10 +56,28 @@ namespace FileEncrypter
             ProgressSection.Visibility = Visibility.Visible;
             CancelButton.IsEnabled = true;
 
-            var progress = new Progress<double>(pct => ProgressBar.Value = pct);
+            var progress = new Progress<double>(pct => 
+            {
+                ProgressBar.Value = pct;
+                // Actualizar notificación de progreso cada 10%
+                if (pct % 10 < 1)
+                {
+                    NotificationService.UpdateProgressNotification(Path.GetFileName(input), pct);
+                }
+            });
+            
+            // Mostrar notificación de progreso inicial
+            NotificationService.ShowProgressNotification("Encriptación", Path.GetFileName(input), 0);
+            
             try
             {
                 var result = await EncryptionService.EncryptFileWithRecoveryAsync(input, output, pwd, progress, _cts.Token);
+                
+                // Limpiar notificación de progreso
+                NotificationService.ClearNotificationGroup("progress");
+                
+                // Mostrar notificación de éxito
+                NotificationService.ShowEncryptionSuccess(Path.GetFileName(input), output, result.RecoveryPhrase);
                 
                 // Mostrar ventana de frase de recuperación
                 var recoveryWindow = new RecoveryPhraseWindow(result.RecoveryPhrase)
@@ -67,13 +85,20 @@ namespace FileEncrypter
                     Owner = this
                 };
                 recoveryWindow.ShowDialog();
+                
+                // Recordatorio adicional de la frase de recuperación
+                NotificationService.ShowRecoveryPhraseReminder(result.RecoveryPhrase);
             }
             catch (OperationCanceledException)
             {
+                NotificationService.ClearNotificationGroup("progress");
+                NotificationService.ShowWarning("Operación Cancelada", "La encriptación fue cancelada por el usuario.");
                 CustomMessageBox.ShowWarning("La operación de encriptación fue cancelada por el usuario.", "Operación Cancelada", this);
             }
             catch (Exception ex)
             {
+                NotificationService.ClearNotificationGroup("progress");
+                NotificationService.ShowError("Error de Encriptación", $"Error procesando {Path.GetFileName(input)}: {ex.Message}");
                 CustomMessageBox.ShowError($"Ocurrió un error durante la encriptación:\n\n{ex.Message}", "Error de Encriptación", this);
             }
             finally
@@ -128,36 +153,63 @@ namespace FileEncrypter
             ProgressSection.Visibility = Visibility.Visible;
             CancelButton.IsEnabled = true;
 
-            var progress = new Progress<double>(pct => ProgressBar.Value = pct);
+            var progress = new Progress<double>(pct => 
+            {
+                ProgressBar.Value = pct;
+                // Actualizar notificación de progreso cada 10%
+                if (pct % 10 < 1)
+                {
+                    NotificationService.UpdateProgressNotification(Path.GetFileName(input), pct);
+                }
+            });
+            
+            // Mostrar notificación de progreso inicial
+            NotificationService.ShowProgressNotification("Desencriptación", Path.GetFileName(input), 0);
+            
             try
             {
                 var output = await EncryptionService.DecryptFileWithPasswordOrRecoveryAsync(
                     input, password, recoveryPhrase, dir, progress, _cts.Token);
+                
+                // Limpiar notificación de progreso
+                NotificationService.ClearNotificationGroup("progress");
+                
+                // Mostrar notificación de éxito
+                NotificationService.ShowDecryptionSuccess(Path.GetFileName(output), output);
                 
                 var method = usePassword ? "contraseña" : "frase de recuperación";
                 CustomMessageBox.ShowSuccess($"El archivo se ha desencriptado correctamente usando {method}.\n\nUbicación: {output}", "Desencriptación Completada", this);
             }
             catch (OperationCanceledException)
             {
+                NotificationService.ClearNotificationGroup("progress");
+                NotificationService.ShowWarning("Operación Cancelada", "La desencriptación fue cancelada por el usuario.");
                 CustomMessageBox.ShowWarning("La operación de desencriptación fue cancelada por el usuario.", "Operación Cancelada", this);
             }
             catch (CryptographicException ex)
             {
+                NotificationService.ClearNotificationGroup("progress");
+                
                 if (ex.Message.Contains("frase de recuperación"))
                 {
+                    NotificationService.ShowError("Frase de Recuperación Incorrecta", "La frase de recuperación ingresada no es válida.");
                     CustomMessageBox.ShowError("Frase de recuperación incorrecta o archivo corrupto.", "Error de Desencriptación", this);
                 }
                 else if (ex.Message.Contains("no tiene frase de recuperación"))
                 {
+                    NotificationService.ShowWarning("Archivo Legacy", "Este archivo no tiene frase de recuperación. Use la contraseña original.");
                     CustomMessageBox.ShowError("Este archivo fue encriptado con una versión anterior y no tiene frase de recuperación. Use la contraseña original.", "Sin Frase de Recuperación", this);
                 }
                 else
                 {
+                    NotificationService.ShowError("Contraseña Incorrecta", "La contraseña ingresada no es válida para este archivo.");
                     CustomMessageBox.ShowPasswordError(this);
                 }
             }
             catch (Exception ex)
             {
+                NotificationService.ClearNotificationGroup("progress");
+                NotificationService.ShowError("Error de Desencriptación", $"Error procesando {Path.GetFileName(input)}: {ex.Message}");
                 CustomMessageBox.ShowError($"Ocurrió un error durante la desencriptación:\n\n{ex.Message}", "Error de Desencriptación", this);
             }
             finally
@@ -318,14 +370,20 @@ namespace FileEncrypter
             }
             catch (OperationCanceledException)
             {
+                NotificationService.ClearNotificationGroup("progress");
+                NotificationService.ShowWarning("Operación Cancelada", "La operación fue cancelada por el usuario.");
                 CustomMessageBox.ShowWarning("La operación fue cancelada por el usuario.", "Operación Cancelada", this);
             }
             catch (CryptographicException)
             {
+                NotificationService.ClearNotificationGroup("progress");
+                NotificationService.ShowError("Contraseña Incorrecta", "La contraseña proporcionada no es válida.");
                 CustomMessageBox.ShowPasswordError(this);
             }
             catch (Exception ex)
             {
+                NotificationService.ClearNotificationGroup("progress");
+                NotificationService.ShowError("Error en Operación", $"Ocurrió un error: {ex.Message}");
                 CustomMessageBox.ShowError($"Ocurrió un error durante la operación:\n\n{ex.Message}", "Error", this);
             }
             finally
@@ -339,7 +397,15 @@ namespace FileEncrypter
 
         private IProgress<double> GetProgressReporter()
         {
-            return new Progress<double>(pct => ProgressBar.Value = pct);
+            return new Progress<double>(pct => 
+            {
+                ProgressBar.Value = pct;
+                // Actualizar notificación de progreso cada 10%
+                if (pct % 10 < 1)
+                {
+                    NotificationService.UpdateProgressNotification("Archivo", pct);
+                }
+            });
         }
 
         #endregion
