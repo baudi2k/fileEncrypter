@@ -477,5 +477,122 @@
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="FontSize" Value="12"/>
     </Style>
+
+    <!-- Modern ComboBox Style -->
+    <Style x:Key="ModernComboBox" TargetType="ComboBox">
+        <Setter Property="Background" Value="#FF3A3A3A"/>
+        <Setter Property="Foreground" Value="{StaticResource OnSurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="#FF4A4A4A"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"/>
+                        <Grid Margin="{TemplateBinding Padding}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ContentPresenter Grid.Column="0"
+                                            x:Name="contentPresenter"
+                                            Content="{TemplateBinding SelectionBoxItem}" 
+                                            ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                            VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="▼" 
+                                     VerticalAlignment="Center" 
+                                     Margin="8,0,0,0" 
+                                     Foreground="{StaticResource AccentBrush}"/>
+                        </Grid>
+                        <Popup x:Name="PART_Popup" 
+                               AllowsTransparency="True"
+                               Grid.ColumnSpan="2"
+                               IsOpen="{Binding Path=IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                               PopupAnimation="{DynamicResource {x:Static SystemParameters.ComboBoxPopupAnimationKey}}"
+                               Placement="Bottom">
+                            <Border Background="#FF3A3A3A" 
+                                    BorderBrush="#FF4A4A4A" 
+                                    BorderThickness="1" 
+                                    CornerRadius="8"
+                                    MinWidth="{TemplateBinding ActualWidth}">
+                                <ScrollViewer x:Name="DropDownScrollViewer">
+                                    <ItemsPresenter x:Name="ItemsPresenter"/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Modern DataGrid Style -->
+    <Style x:Key="ModernDataGrid" TargetType="DataGrid">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource OnSurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="#FF4A4A4A"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+        <Setter Property="HorizontalGridLinesBrush" Value="#FF4A4A4A"/>
+        <Setter Property="VerticalGridLinesBrush" Value="Transparent"/>
+        <Setter Property="HeadersVisibility" Value="Column"/>
+        <Setter Property="RowHeaderWidth" Value="0"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="AlternatingRowBackground" Value="#FF2A2A2A"/>
+        <Setter Property="RowBackground" Value="Transparent"/>
+        <Setter Property="ColumnHeaderStyle">
+            <Setter.Value>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                    <Setter Property="FontSize" Value="14"/>
+                    <Setter Property="Padding" Value="12,8"/>
+                    <Setter Property="BorderThickness" Value="0,0,1,0"/>
+                    <Setter Property="BorderBrush" Value="White"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                </Style>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="CellStyle">
+            <Setter.Value>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Padding" Value="12,8"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="DataGridCell">
+                                <Border Background="{TemplateBinding Background}" 
+                                        BorderBrush="{TemplateBinding BorderBrush}" 
+                                        BorderThickness="{TemplateBinding BorderThickness}" 
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Setter.Value>
+        </Setter>
+    </Style>
      
 </ResourceDictionary>

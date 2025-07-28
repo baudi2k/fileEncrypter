@@ -39,6 +39,11 @@
                             Content="🔓 Desencriptar"
                             Style="{StaticResource SidebarButton}"
                             Click="DecryptNav_Click"/>
+                    <Button x:Name="HistoryNavButton"
+                            Content="📋 Historial"
+                            Style="{StaticResource SidebarButton}"
+                            Click="HistoryNav_Click"
+                            Margin="0,8,0,0"/>
                 </StackPanel>
 
                 <!-- Progress Section (Global) -->

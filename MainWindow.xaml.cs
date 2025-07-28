@@ -1,5 +1,6 @@
 ﻿using FileEncrypter.Helpers;
 using FileEncrypter.Services;
+using FileEncrypter.Models;
 using Microsoft.Win32;
 using System;
 using System.IO;
@@ -72,6 +73,10 @@ namespace FileEncrypter
                 
                 // Mostrar notificación de éxito
                 NotificationService.ShowEncryptionSuccess(Path.GetFileName(input), output, result.RecoveryPhrase);
+                
+                // Agregar al historial
+                var fileInfo = new FileInfo(input);
+                await HistoryService.AddEncryptionEntryAsync(input, output, fileInfo.Length);
                 
                 // Mostrar ventana de frase de recuperación
                 var recoveryWindow = new RecoveryPhraseWindow(result.RecoveryPhrase)
@@ -159,6 +164,9 @@ namespace FileEncrypter
             {
                 var output = await EncryptionService.DecryptFileWithPasswordOrRecoveryAsync(
                     input, password, recoveryPhrase, dir, progress, _cts.Token);
+                
+                // Marcar como desencriptado en el historial
+                await HistoryService.MarkAsDecryptedAsync(input, output);
                 
                 // No limpiar notificación de progreso (ya que no la mostramos)
                 
@@ -341,6 +349,10 @@ namespace FileEncrypter
             await ExecuteFileOperation(async () =>
             {
                 var output = await EncryptionService.DecryptFileWithPasswordOrRecoveryAsync(inputPath, password, null, dir, GetProgressReporter(), _cts.Token);
+                
+                // Marcar como desencriptado en el historial
+                await HistoryService.MarkAsDecryptedAsync(inputPath, output);
+                
                 CustomMessageBox.ShowSuccess($"El archivo se ha desencriptado correctamente usando contraseña.\n\nUbicación: {output}", "Desencriptación Completada", this);
             });
         }
@@ -398,7 +410,7 @@ namespace FileEncrypter
 
         private void EncryptNav_Click(object sender, RoutedEventArgs e)
         {
-            if (EncryptNavButton == null || DecryptNavButton == null || 
+            if (EncryptNavButton == null || DecryptNavButton == null || HistoryNavButton == null ||
                 EncryptSection == null || DecryptSection == null) return;
 
             _currentSection = "Encrypt";
@@ -406,6 +418,7 @@ namespace FileEncrypter
             // Update button styles
             EncryptNavButton.Style = (Style)FindResource("SidebarButtonActive");
             DecryptNavButton.Style = (Style)FindResource("SidebarButton");
+            HistoryNavButton.Style = (Style)FindResource("SidebarButton");
             
             // Show/Hide sections
             EncryptSection.Visibility = Visibility.Visible;
@@ -414,7 +427,7 @@ namespace FileEncrypter
 
         private void DecryptNav_Click(object sender, RoutedEventArgs e)
         {
-            if (EncryptNavButton == null || DecryptNavButton == null || 
+            if (EncryptNavButton == null || DecryptNavButton == null || HistoryNavButton == null ||
                 EncryptSection == null || DecryptSection == null) return;
 
             _currentSection = "Decrypt";
@@ -422,10 +435,27 @@ namespace FileEncrypter
             // Update button styles
             EncryptNavButton.Style = (Style)FindResource("SidebarButton");
             DecryptNavButton.Style = (Style)FindResource("SidebarButtonActive");
+            HistoryNavButton.Style = (Style)FindResource("SidebarButton");
             
             // Show/Hide sections
             EncryptSection.Visibility = Visibility.Collapsed;
             DecryptSection.Visibility = Visibility.Visible;
+        }
+
+        private void HistoryNav_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var historyWindow = new HistoryWindow
+                {
+                    Owner = this
+                };
+                historyWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                CustomMessageBox.ShowError($"Error abriendo historial: {ex.Message}", "Error", this);
+            }
         }
 
         #endregion
@@ -827,6 +857,10 @@ namespace FileEncrypter
             await ExecuteFileOperation(async () =>
             {
                 var result = await EncryptionService.EncryptFileWithRecoveryAsync(inputPath, output, password, GetProgressReporter(), _cts.Token);
+                
+                // Agregar al historial
+                var fileInfo = new FileInfo(inputPath);
+                await HistoryService.AddEncryptionEntryAsync(inputPath, output, fileInfo.Length);
                 
                 // Mostrar ventana de frase de recuperación
                 Application.Current.Dispatcher.Invoke(() =>

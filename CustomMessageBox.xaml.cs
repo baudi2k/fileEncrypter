@@ -87,6 +87,16 @@ namespace FileEncrypter
             Show(message, title, MessageType.Warning, owner);
         }
 
+        public static void ShowInfo(string message, string title = "Información", Window? owner = null)
+        {
+            Show(message, title, MessageType.Information, owner);
+        }
+
+        public static MessageBoxResult ShowQuestion(string message, string title = "Confirmación", Window? owner = null)
+        {
+            return MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
+        }
+
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
             Close();
