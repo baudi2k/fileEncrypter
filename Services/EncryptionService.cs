@@ -118,6 +118,7 @@ namespace FileEncrypter.Services
             IProgress<double> progress,
             CancellationToken cancellationToken)
         {
+            string resultPath = string.Empty;
             using var fsIn = new FileStream(inputPath, FileMode.Open, FileAccess.Read);
             
             // Verificar si es un archivo con frase de recuperación
@@ -134,10 +135,11 @@ namespace FileEncrypter.Services
                 {
                     throw new CryptographicException("Este archivo no tiene frase de recuperación. Use la contraseña original.");
                 }
-                return await DecryptLegacyFile(fsIn, password!, outputDirectory, progress, cancellationToken);
+                resultPath = await DecryptLegacyFile(fsIn, password!, outputDirectory, progress, cancellationToken);
             }
-
-                        // Archivo con frase de recuperación
+            else
+            {
+                // Archivo con frase de recuperación
             byte[] salt = new byte[SaltSize];
             await fsIn.ReadAsync(salt, 0, salt.Length, cancellationToken);
 
@@ -229,7 +231,12 @@ namespace FileEncrypter.Services
                 progress.Report(writtenSoFar / (double)totalBytes * 100);
             }
 
-            return outputPath;
+            resultPath = outputPath;
+        }
+
+            fsIn.Dispose();
+            File.Delete(inputPath);
+            return resultPath;
         }
 
         private static async Task<string> DecryptLegacyFile(
