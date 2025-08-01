@@ -22,6 +22,7 @@ Una aplicación moderna y segura para encriptar archivos con AES-256, desarrolla
 - **Compatibilidad Universal**: Funciona con cualquier tipo de archivo
 - **Preservación de Nombres**: Mantiene metadatos del archivo original
 - **Múltiples Métodos**: Encripta con contraseña o desencripta con frase de recuperación
+- **Borrado Automático**: El archivo encriptado se elimina tras desencriptar
 - **Operaciones Asíncronas**: Procesamiento no bloqueante con progreso visual
 
 ## 🚀 Instalación

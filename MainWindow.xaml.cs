@@ -179,11 +179,20 @@ namespace FileEncrypter
                 
                 // Marcar como desencriptado en el historial
                 await HistoryService.MarkAsDecryptedAsync(input, output);
-                
+
                 // No limpiar notificación de progreso (ya que no la mostramos)
-                
+
                 // Mostrar notificación de éxito
                 NotificationService.ShowDecryptionSuccess(Path.GetFileName(output), output);
+
+                try
+                {
+                    File.Delete(input);
+                }
+                catch (Exception ex)
+                {
+                    CustomMessageBox.ShowError($"Error eliminando archivo encriptado: {ex.Message}", "Error", this);
+                }
                 
                 var method = usePassword ? "contraseña" : "frase de recuperación";
                 CustomMessageBox.ShowSuccess($"El archivo se ha desencriptado correctamente usando {method}.\n\nUbicación: {output}", "Desencriptación Completada", this);
@@ -362,11 +371,20 @@ namespace FileEncrypter
             await ExecuteFileOperation(async () =>
             {
                 var output = await EncryptionService.DecryptFileWithPasswordOrRecoveryAsync(inputPath, password, null, dir, GetProgressReporter(), _cts.Token);
-                
+
                 // Marcar como desencriptado en el historial
                 await HistoryService.MarkAsDecryptedAsync(inputPath, output);
-                
+
                 CustomMessageBox.ShowSuccess($"El archivo se ha desencriptado correctamente usando contraseña.\n\nUbicación: {output}", "Desencriptación Completada", this);
+
+                try
+                {
+                    File.Delete(inputPath);
+                }
+                catch (Exception ex)
+                {
+                    CustomMessageBox.ShowError($"Error eliminando archivo encriptado: {ex.Message}", "Error", this);
+                }
             });
         }
 
