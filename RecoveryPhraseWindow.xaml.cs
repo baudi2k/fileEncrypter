@@ -42,15 +42,15 @@ namespace FileEncrypter
         {
             try
             {
-                var saveDialog = new SaveFileDialog
+                var dialog = new SaveFileDialog
                 {
                     Title = "Guardar Frase de Recuperación",
-                    Filter = "Archivo de Texto (*.txt)|*.txt|Todos los archivos (*.*)|*.*",
+                    Filter = "Archivo de Texto (*.txt)|*.txt",
                     DefaultExt = "txt",
                     FileName = $"frase_recuperacion_{DateTime.Now:yyyyMMdd_HHmmss}.txt"
                 };
 
-                if (saveDialog.ShowDialog() == true)
+                if (dialog.ShowDialog() == true)
                 {
                     var content = $"FRASE DE RECUPERACIÓN - FILEENCRYPTER\n";
                     content += $"Generada: {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n\n";
@@ -63,8 +63,8 @@ namespace FileEncrypter
                     content += "• Considera hacer una copia física escrita a mano\n";
                     content += "• Si pierdes tanto la contraseña como esta frase, no podrás recuperar tus archivos\n";
 
-                    File.WriteAllText(saveDialog.FileName, content);
-                    CustomMessageBox.ShowSuccess($"Frase de recuperación guardada en:\n{saveDialog.FileName}", "Guardado", this);
+                    File.WriteAllText(dialog.FileName, content);
+                    CustomMessageBox.ShowSuccess($"Frase de recuperación guardada en:\n{dialog.FileName}", "Guardado", this);
                 }
             }
             catch (Exception ex)
@@ -84,4 +84,4 @@ namespace FileEncrypter
             Close();
         }
     }
-} 
+}
