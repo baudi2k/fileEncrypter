@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -70,16 +71,20 @@ namespace FileEncrypter.Services
             long totalBytes = new FileInfo(inputPath).Length;
             writer.Write(totalBytes);
 
+            using var compressor = new BrotliStream(crypto, CompressionLevel.SmallestSize, leaveOpen: true);
+
             byte[] buffer = new byte[BufferSize];
             long readSoFar = 0;
             using var fsIn = new FileStream(inputPath, FileMode.Open, FileAccess.Read);
             int bytesRead;
             while ((bytesRead = await fsIn.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
             {
-                await crypto.WriteAsync(buffer, 0, bytesRead, cancellationToken);
+                await compressor.WriteAsync(buffer, 0, bytesRead, cancellationToken);
                 readSoFar += bytesRead;
                 progress.Report(readSoFar / (double)totalBytes * 100);
             }
+            await compressor.FlushAsync(cancellationToken);
+            await compressor.DisposeAsync();
             await crypto.FlushAsync(cancellationToken);
 
             return new EncryptionResult
@@ -223,8 +228,9 @@ namespace FileEncrypter.Services
             long writtenSoFar = 0;
 
             using var fsOut = new FileStream(outputPath, FileMode.Create, FileAccess.Write);
+            using var decompressor = new BrotliStream(reader.BaseStream, CompressionMode.Decompress, leaveOpen: true);
             int bytesRead;
-            while ((bytesRead = await reader.BaseStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
+            while ((bytesRead = await decompressor.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
             {
                 await fsOut.WriteAsync(buffer, 0, bytesRead, cancellationToken);
                 writtenSoFar += bytesRead;

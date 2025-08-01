@@ -23,6 +23,7 @@ Una aplicación moderna y segura para encriptar archivos con AES-256, desarrolla
 - **Preservación de Nombres**: Mantiene metadatos del archivo original
 - **Múltiples Métodos**: Encripta con contraseña o desencripta con frase de recuperación
 - **Operaciones Asíncronas**: Procesamiento no bloqueante con progreso visual
+- **Compresión Integrada**: Archivos comprimidos automáticamente antes de ser encriptados
 
 ## 🚀 Instalación
 
