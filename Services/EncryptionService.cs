@@ -71,7 +71,8 @@ namespace FileEncrypter.Services
             long totalBytes = new FileInfo(inputPath).Length;
             writer.Write(totalBytes);
 
-            using var compressor = new BrotliStream(crypto, CompressionLevel.SmallestSize, leaveOpen: true);
+            // Use fastest compression level to speed up encryption
+            using var compressor = new BrotliStream(crypto, CompressionLevel.Fastest, leaveOpen: true);
 
             byte[] buffer = new byte[BufferSize];
             long readSoFar = 0;
