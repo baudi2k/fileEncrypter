@@ -87,6 +87,18 @@ namespace FileEncrypter
                 
                 // Recordatorio adicional de la frase de recuperación
                 NotificationService.ShowRecoveryPhraseReminder(result.RecoveryPhrase);
+
+                if (DeleteOriginalCheckBox?.IsChecked == true)
+                {
+                    try
+                    {
+                        File.Delete(input);
+                    }
+                    catch (Exception ex)
+                    {
+                        CustomMessageBox.ShowError($"Error eliminando archivo original: {ex.Message}", "Error", this);
+                    }
+                }
             }
             catch (OperationCanceledException)
             {
@@ -276,7 +288,8 @@ namespace FileEncrypter
                             CustomMessageBox.ShowWarning("Por favor, ingrese una contraseña de encriptación antes de procesar el archivo.", "Contraseña Requerida", this);
                             return;
                         }
-                        await ProcessEncryptFile(filePath, pwd);
+                        bool deleteOriginal = DeleteOriginalCheckBox?.IsChecked == true;
+                        await ProcessEncryptFile(filePath, pwd, deleteOriginal);
                     }
                     else if (_currentSection == "Decrypt" && isEncFile)
                     {
@@ -337,9 +350,9 @@ namespace FileEncrypter
             }
         }
 
-        private async Task ProcessEncryptFile(string inputPath, string password)
+        private async Task ProcessEncryptFile(string inputPath, string password, bool deleteOriginal)
         {
-            await ProcessEncryptFileWithRecovery(inputPath, password);
+            await ProcessEncryptFileWithRecovery(inputPath, password, deleteOriginal);
         }
 
         private async Task ProcessDecryptFile(string inputPath, string password)
@@ -848,7 +861,7 @@ namespace FileEncrypter
             }
         }
 
-        private async Task ProcessEncryptFileWithRecovery(string inputPath, string password)
+        private async Task ProcessEncryptFileWithRecovery(string inputPath, string password, bool deleteOriginal)
         {
             var dir = Path.GetDirectoryName(inputPath) ?? Environment.CurrentDirectory;
             var hashName = HashHelper.ComputeHash(Path.GetFileName(inputPath));
@@ -857,11 +870,11 @@ namespace FileEncrypter
             await ExecuteFileOperation(async () =>
             {
                 var result = await EncryptionService.EncryptFileWithRecoveryAsync(inputPath, output, password, GetProgressReporter(), _cts.Token);
-                
+
                 // Agregar al historial
                 var fileInfo = new FileInfo(inputPath);
                 await HistoryService.AddEncryptionEntryAsync(inputPath, output, fileInfo.Length);
-                
+
                 // Mostrar ventana de frase de recuperación
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -871,6 +884,21 @@ namespace FileEncrypter
                     };
                     recoveryWindow.ShowDialog();
                 });
+
+                if (deleteOriginal)
+                {
+                    try
+                    {
+                        File.Delete(inputPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            CustomMessageBox.ShowError($"Error eliminando archivo original: {ex.Message}", "Error", this);
+                        });
+                    }
+                }
             });
         }
 

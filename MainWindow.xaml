@@ -336,12 +336,18 @@
                                 </StackPanel>
                             </Grid>
 
-                            <Button 
+                            <Button
                                 Content="📁 Seleccionar Archivo para Encriptar"
                                 Style="{StaticResource AccentButton}"
                                 Click="EncryptFile_Click"
                                 HorizontalAlignment="Center"
                                 Margin="0,16,0,0"/>
+
+                            <CheckBox
+                                x:Name="DeleteOriginalCheckBox"
+                                Content="Eliminar archivo original después de encriptar"
+                                Style="{StaticResource ModernCheckBox}"
+                                Margin="0,8,0,0"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
