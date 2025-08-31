@@ -1096,6 +1096,48 @@ namespace FileEncrypter
                 CustomMessageBox.ShowError($"Error al seleccionar certificado: {ex.Message}", "Error", this);
             }
         }
+
+        private void GenerateCertificate_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var certWindow = new CertificateGenerationWindow
+                {
+                    Owner = this
+                };
+                
+                if (certWindow.ShowDialog() == true)
+                {
+                    // Actualizar la lista de certificados disponibles
+                    // y seleccionar automáticamente el nuevo certificado si está instalado
+                    try
+                    {
+                        var certificates = _certificateService.GetAvailableCertificates();
+                        var latestCert = certificates
+                            .Where(c => c.Certificate.NotBefore >= DateTime.Now.AddMinutes(-5))
+                            .OrderByDescending(c => c.Certificate.NotBefore)
+                            .FirstOrDefault();
+
+                        if (latestCert != null)
+                        {
+                            _selectedEncryptCertificate = latestCert;
+                            SelectedCertificateTextBox.Text = latestCert.FriendlyName;
+                            CertificateInfoText.Text = $"Válido hasta: {latestCert.ValidTo:dd/MM/yyyy}";
+                            CertificateInfoText.Foreground = new SolidColorBrush(Color.FromRgb(16, 185, 129)); // Verde
+                        }
+                    }
+                    catch (Exception updateEx)
+                    {
+                        // Si no se puede actualizar automáticamente, mostrar mensaje informativo
+                        CustomMessageBox.ShowInfo("Certificado generado exitosamente. Use el botón 'Seleccionar' para elegir el nuevo certificado.", "Información", this);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                CustomMessageBox.ShowError($"Error al generar certificado: {ex.Message}", "Error", this);
+            }
+        }
         
         private void SelectDecryptCertificate_Click(object sender, RoutedEventArgs e)
         {

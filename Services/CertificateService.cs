@@ -339,5 +339,152 @@ namespace FileEncrypter.Services
         }
 
         #endregion
+
+        #region Generación de Certificados
+
+        /// <summary>
+        /// Genera un nuevo certificado auto-firmado
+        /// </summary>
+        /// <param name="subjectName">Nombre del sujeto (ej: "CN=Mi Certificado")</param>
+        /// <param name="keySize">Tamaño de la clave RSA en bits (2048, 3072, 4096)</param>
+        /// <param name="validityYears">Años de validez del certificado</param>
+        /// <param name="installInStore">Si debe instalarse automáticamente en el almacén de certificados</param>
+        /// <returns>El certificado generado</returns>
+        public X509Certificate2 GenerateSelfSignedCertificate(
+            string subjectName, 
+            int keySize = 2048, 
+            int validityYears = 5, 
+            bool installInStore = true)
+        {
+            try
+            {
+                // Validar parámetros
+                if (string.IsNullOrWhiteSpace(subjectName))
+                    throw new ArgumentException("El nombre del sujeto no puede estar vacío", nameof(subjectName));
+
+                if (keySize != 2048 && keySize != 3072 && keySize != 4096)
+                    throw new ArgumentException("El tamaño de clave debe ser 2048, 3072 o 4096 bits", nameof(keySize));
+
+                if (validityYears <= 0 || validityYears > 30)
+                    throw new ArgumentException("La validez debe estar entre 1 y 30 años", nameof(validityYears));
+
+                // Crear solicitud de certificado
+                using (var rsa = RSA.Create(keySize))
+                {
+                    var request = new CertificateRequest(subjectName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+
+                    // Agregar extensiones básicas
+                    request.CertificateExtensions.Add(
+                        new X509BasicConstraintsExtension(false, false, 0, false));
+
+                    request.CertificateExtensions.Add(
+                        new X509KeyUsageExtension(
+                            X509KeyUsageFlags.DataEncipherment | 
+                            X509KeyUsageFlags.KeyEncipherment | 
+                            X509KeyUsageFlags.DigitalSignature, 
+                            false));
+
+                    request.CertificateExtensions.Add(
+                        new X509EnhancedKeyUsageExtension(
+                            new OidCollection { 
+                                new Oid("1.3.6.1.5.5.7.3.1"), // Server Authentication
+                                new Oid("1.3.6.1.5.5.7.3.2"), // Client Authentication
+                                new Oid("1.3.6.1.4.1.311.10.3.4") // Encrypting File System
+                            }, 
+                            false));
+
+                    // Generar el certificado auto-firmado
+                    var notBefore = DateTimeOffset.UtcNow.AddDays(-1);
+                    var notAfter = notBefore.AddYears(validityYears);
+                    
+                    var certificate = request.CreateSelfSigned(notBefore, notAfter);
+                    
+                    // Establecer nombre amigable
+                    certificate.FriendlyName = $"Certificado de Encriptación - {DateTime.Now:yyyy-MM-dd}";
+
+                    // Instalar en el almacén si se solicita
+                    if (installInStore)
+                    {
+                        InstallCertificate(certificate);
+                    }
+
+                    return certificate;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al generar certificado: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Instala un certificado en el almacén personal del usuario actual
+        /// </summary>
+        /// <param name="certificate">Certificado a instalar</param>
+        public void InstallCertificate(X509Certificate2 certificate)
+        {
+            try
+            {
+                using (var store = new X509Store(StoreName.My, StoreLocation.CurrentUser))
+                {
+                    store.Open(OpenFlags.ReadWrite);
+                    store.Add(certificate);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al instalar certificado en el almacén: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Exporta un certificado a un archivo PFX protegido con contraseña
+        /// </summary>
+        /// <param name="certificate">Certificado a exportar</param>
+        /// <param name="filePath">Ruta donde guardar el archivo</param>
+        /// <param name="password">Contraseña para proteger el archivo</param>
+        public void ExportCertificateToPfx(X509Certificate2 certificate, string filePath, string password)
+        {
+            try
+            {
+                if (!certificate.HasPrivateKey)
+                    throw new InvalidOperationException("El certificado debe tener clave privada para exportar a PFX");
+
+                var pfxData = certificate.Export(X509ContentType.Pfx, password);
+                File.WriteAllBytes(filePath, pfxData);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al exportar certificado: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Importa un certificado desde un archivo PFX
+        /// </summary>
+        /// <param name="filePath">Ruta del archivo PFX</param>
+        /// <param name="password">Contraseña del archivo</param>
+        /// <param name="installInStore">Si debe instalarse en el almacén</param>
+        /// <returns>El certificado importado</returns>
+        public X509Certificate2 ImportCertificateFromPfx(string filePath, string password, bool installInStore = false)
+        {
+            try
+            {
+                var certificate = new X509Certificate2(filePath, password, X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+                
+                if (installInStore)
+                {
+                    InstallCertificate(certificate);
+                }
+
+                return certificate;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al importar certificado: {ex.Message}", ex);
+            }
+        }
+
+        #endregion
     }
 }

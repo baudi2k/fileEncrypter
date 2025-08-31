@@ -1,0 +1,387 @@
+<Window x:Class="FileEncrypter.CertificateGenerationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Generar Certificado PKI" Height="600" Width="500"
+        Background="#FF0A1628"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        MinWidth="450" MinHeight="500">
+
+    <Window.Resources>
+        <!-- Brush definitions -->
+        <SolidColorBrush x:Key="AccentBrush" Color="#FF06B6D4"/>
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#FF0A1628"/>
+        <SolidColorBrush x:Key="SecondaryBackgroundBrush" Color="#FF0F2135"/>
+        <SolidColorBrush x:Key="BorderBrush" Color="#FF374151"/>
+        <SolidColorBrush x:Key="TextBrush" Color="#FFFFFFFF"/>
+        <SolidColorBrush x:Key="PlaceholderBrush" Color="#FF9CA3AF"/>
+
+        <!-- Button Styles -->
+        <Style x:Key="AccentButton" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="20,12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="8" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#FF0891B2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="Padding" Value="20,12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#FF1F2937"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- TextBox Style -->
+        <Style x:Key="ModernTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="{StaticResource SecondaryBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ScrollViewer x:Name="PART_ContentHost" 
+                                        Margin="{TemplateBinding Padding}"
+                                        VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ComboBox Style -->
+        <Style x:Key="ModernComboBox" TargetType="ComboBox">
+            <Setter Property="Background" Value="{StaticResource SecondaryBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="ToggleButton"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                        ClickMode="Press">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="6">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition/>
+                                                    <ColumnDefinition Width="20"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Path x:Name="Arrow" 
+                                                      Grid.Column="1" 
+                                                      Fill="{StaticResource TextBrush}" 
+                                                      HorizontalAlignment="Center" 
+                                                      VerticalAlignment="Center" 
+                                                      Data="M 0 0 L 4 4 L 8 0 Z"/>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter x:Name="ContentSite"
+                                            IsHitTestVisible="False"
+                                            Content="{TemplateBinding SelectionBoxItem}"
+                                            ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                            ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                            Margin="{TemplateBinding Padding}"
+                                            VerticalAlignment="Center"
+                                            HorizontalAlignment="Left"/>
+                            <Popup x:Name="Popup"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
+                                <Grid x:Name="DropDown"
+                                      SnapsToDevicePixels="True"
+                                      MinWidth="{TemplateBinding ActualWidth}"
+                                      MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <Border x:Name="DropDownBorder"
+                                            Background="{StaticResource SecondaryBackgroundBrush}"
+                                            BorderThickness="1"
+                                            BorderBrush="{StaticResource BorderBrush}"
+                                            CornerRadius="6"/>
+                                    <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
+                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="ToggleButton" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+                        <Setter Property="Padding" Value="12,8"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ComboBoxItem">
+                                    <Border Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsHighlighted" Value="True">
+                                            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- CheckBox Style -->
+        <Style x:Key="ModernCheckBox" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Margin" Value="0,8"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,30">
+            <TextBlock Text="🔐 Generar Certificado PKI" 
+                       FontSize="24" 
+                       FontWeight="Bold" 
+                       Foreground="{StaticResource AccentBrush}"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,10"/>
+            <TextBlock Text="Crea un certificado auto-firmado para encriptación de archivos" 
+                       FontSize="14" 
+                       Foreground="{StaticResource PlaceholderBrush}"
+                       HorizontalAlignment="Center"
+                       TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <!-- Main Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Certificate Name -->
+                <TextBlock Text="Nombre del Certificado" 
+                           Foreground="{StaticResource TextBrush}" 
+                           FontWeight="SemiBold" 
+                           Margin="0,0,0,8"/>
+                <TextBox x:Name="CertificateNameTextBox" 
+                         Style="{StaticResource ModernTextBox}"
+                         Text="Mi Certificado de Encriptación"
+                         Margin="0,0,0,20"/>
+
+                <!-- Subject Name -->
+                <TextBlock Text="Nombre del Sujeto (DN)" 
+                           Foreground="{StaticResource TextBrush}" 
+                           FontWeight="SemiBold" 
+                           Margin="0,0,0,8"/>
+                <TextBox x:Name="SubjectNameTextBox" 
+                         Style="{StaticResource ModernTextBox}"
+                         Text="CN=Mi Certificado de Encriptación"
+                         Margin="0,0,0,5"/>
+                <TextBlock Text="Ejemplo: CN=Juan Pérez, O=Mi Empresa, C=ES" 
+                           Foreground="{StaticResource PlaceholderBrush}" 
+                           FontSize="12" 
+                           Margin="0,0,0,20"/>
+
+                <!-- Key Size -->
+                <TextBlock Text="Tamaño de Clave RSA" 
+                           Foreground="{StaticResource TextBrush}" 
+                           FontWeight="SemiBold" 
+                           Margin="0,0,0,8"/>
+                <ComboBox x:Name="KeySizeComboBox" 
+                          Style="{StaticResource ModernComboBox}"
+                          SelectedIndex="0"
+                          Margin="0,0,0,20">
+                    <ComboBoxItem Content="2048 bits (Recomendado)"/>
+                    <ComboBoxItem Content="3072 bits"/>
+                    <ComboBoxItem Content="4096 bits (Más seguro)"/>
+                </ComboBox>
+
+                <!-- Validity Period -->
+                <TextBlock Text="Período de Validez" 
+                           Foreground="{StaticResource TextBrush}" 
+                           FontWeight="SemiBold" 
+                           Margin="0,0,0,8"/>
+                <ComboBox x:Name="ValidityYearsComboBox" 
+                          Style="{StaticResource ModernComboBox}"
+                          SelectedIndex="2"
+                          Margin="0,0,0,20">
+                    <ComboBoxItem Content="1 año"/>
+                    <ComboBoxItem Content="2 años"/>
+                    <ComboBoxItem Content="5 años (Recomendado)"/>
+                    <ComboBoxItem Content="10 años"/>
+                    <ComboBoxItem Content="20 años"/>
+                </ComboBox>
+
+                <!-- Options -->
+                <TextBlock Text="Opciones" 
+                           Foreground="{StaticResource TextBrush}" 
+                           FontWeight="SemiBold" 
+                           Margin="0,0,0,8"/>
+                
+                <CheckBox x:Name="InstallInStoreCheckBox" 
+                          Content="Instalar automáticamente en el almacén de certificados" 
+                          Style="{StaticResource ModernCheckBox}"
+                          IsChecked="True"/>
+                
+                <CheckBox x:Name="ExportToPfxCheckBox" 
+                          Content="Exportar a archivo PFX" 
+                          Style="{StaticResource ModernCheckBox}"
+                          Checked="ExportToPfxCheckBox_Checked"
+                          Unchecked="ExportToPfxCheckBox_Unchecked"/>
+
+                <!-- PFX Export Options -->
+                <StackPanel x:Name="PfxExportPanel" Visibility="Collapsed" Margin="20,10,0,0">
+                    <TextBlock Text="Contraseña para archivo PFX" 
+                               Foreground="{StaticResource TextBrush}" 
+                               FontWeight="SemiBold" 
+                               Margin="0,0,0,8"/>
+                    <PasswordBox x:Name="PfxPasswordBox" 
+                                 Background="{StaticResource SecondaryBackgroundBrush}"
+                                 Foreground="{StaticResource TextBrush}"
+                                 BorderBrush="{StaticResource BorderBrush}"
+                                 BorderThickness="1"
+                                 Padding="12,10"
+                                 FontSize="14"
+                                 Margin="0,0,0,10"/>
+                    
+                    <TextBlock Text="Confirmar contraseña" 
+                               Foreground="{StaticResource TextBrush}" 
+                               FontWeight="SemiBold" 
+                               Margin="0,0,0,8"/>
+                    <PasswordBox x:Name="PfxPasswordConfirmBox" 
+                                 Background="{StaticResource SecondaryBackgroundBrush}"
+                                 Foreground="{StaticResource TextBrush}"
+                                 BorderBrush="{StaticResource BorderBrush}"
+                                 BorderThickness="1"
+                                 Padding="12,10"
+                                 FontSize="14"
+                                 Margin="0,0,0,10"/>
+                </StackPanel>
+
+                <!-- Progress Section -->
+                <StackPanel x:Name="ProgressSection" Visibility="Collapsed" Margin="0,20,0,0">
+                    <TextBlock x:Name="ProgressText" 
+                               Text="Generando certificado..." 
+                               Foreground="{StaticResource TextBrush}" 
+                               HorizontalAlignment="Center" 
+                               Margin="0,0,0,10"/>
+                    <ProgressBar x:Name="ProgressBar" 
+                                 Height="6" 
+                                 Background="#FF374151" 
+                                 Foreground="{StaticResource AccentBrush}" 
+                                 IsIndeterminate="True"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer Buttons -->
+        <Grid Grid.Row="2" Margin="0,30,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="1" 
+                    Content="Cancelar" 
+                    Style="{StaticResource SecondaryButton}"
+                    Click="Cancel_Click"
+                    Margin="0,0,10,0"/>
+            
+            <Button Grid.Column="2" 
+                    Content="🔐 Generar Certificado" 
+                    Style="{StaticResource AccentButton}"
+                    Click="Generate_Click"/>
+        </Grid>
+    </Grid>
+</Window>
