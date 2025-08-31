@@ -6,6 +6,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -22,10 +24,14 @@ namespace FileEncrypter
         private TextBox? _encryptPasswordTextBox;
         private TextBox? _decryptPasswordTextBox;
         private string _currentSection = "Encrypt"; // "Encrypt" or "Decrypt"
+        private CertificateService _certificateService;
+        private CertificateInfo? _selectedEncryptCertificate;
+        private CertificateInfo? _selectedDecryptCertificate;
 
         public MainWindow()
         {
             InitializeComponent();
+            _certificateService = new CertificateService();
             // Inicializar después de que todos los controles estén listos
             Loaded += MainWindow_Loaded;
         }
@@ -57,7 +63,7 @@ namespace FileEncrypter
             ProgressSection.Visibility = Visibility.Visible;
             CancelButton.IsEnabled = true;
 
-            var progress = new Progress<double>(pct => 
+            IProgress<double> progress = new Progress<double>(pct => 
             {
                 ProgressBar.Value = pct;
                 // Solo actualizar la barra de progreso local, sin notificaciones
@@ -125,8 +131,12 @@ namespace FileEncrypter
         {
             // Determinar método de desencriptación
             bool usePassword = UsePasswordRadio?.IsChecked == true;
+            bool useRecoveryPhrase = UseRecoveryPhraseRadio?.IsChecked == true;
+            bool useCertificate = UseCertificateDecryptRadio?.IsChecked == true;
+            
             string? password = null;
             string? recoveryPhrase = null;
+            CertificateInfo? certificate = null;
 
             if (usePassword)
             {
@@ -137,7 +147,7 @@ namespace FileEncrypter
                     return;
                 }
             }
-            else
+            else if (useRecoveryPhrase)
             {
                 recoveryPhrase = DecryptRecoveryPhraseInput?.Text?.Trim();
                 if (string.IsNullOrWhiteSpace(recoveryPhrase))
@@ -152,6 +162,22 @@ namespace FileEncrypter
                     return;
                 }
             }
+            else if (useCertificate)
+            {
+                if (_selectedDecryptCertificate == null)
+                {
+                    CustomMessageBox.ShowWarning("Por favor, seleccione un certificado PKI antes de continuar.", "Certificado Requerido", this);
+                    return;
+                }
+                
+                if (!_selectedDecryptCertificate.HasPrivateKey)
+                {
+                    CustomMessageBox.ShowWarning("El certificado seleccionado no tiene clave privada. Se requiere la clave privada para desencriptar.", "Certificado Sin Clave Privada", this);
+                    return;
+                }
+                
+                certificate = _selectedDecryptCertificate;
+            }
 
             var dlg = new OpenFileDialog { Filter = "Archivos (*.enc)|*.enc" };
             if (dlg.ShowDialog() != true) return;
@@ -164,7 +190,7 @@ namespace FileEncrypter
             ProgressSection.Visibility = Visibility.Visible;
             CancelButton.IsEnabled = true;
 
-            var progress = new Progress<double>(pct => 
+            IProgress<double> progress = new Progress<double>(pct => 
             {
                 ProgressBar.Value = pct;
                 // Solo actualizar la barra de progreso local, sin notificaciones
@@ -174,8 +200,17 @@ namespace FileEncrypter
             
             try
             {
-                var output = await EncryptionService.DecryptFileWithPasswordOrRecoveryAsync(
-                    input, password, recoveryPhrase, dir, progress, _cts.Token);
+                string output;
+                
+                if (useCertificate && certificate != null)
+                {
+                    output = await DecryptFileWithCertificateAsync(input, certificate, dir, progress, _cts.Token);
+                }
+                else
+                {
+                    output = await EncryptionService.DecryptFileWithPasswordOrRecoveryAsync(
+                        input, password, recoveryPhrase, dir, progress, _cts.Token);
+                }
                 
                 // Marcar como desencriptado en el historial
                 await HistoryService.MarkAsDecryptedAsync(input, output);
@@ -185,7 +220,9 @@ namespace FileEncrypter
                 // Mostrar notificación de éxito
                 NotificationService.ShowDecryptionSuccess(Path.GetFileName(output), output);
                 
-                var method = usePassword ? "contraseña" : "frase de recuperación";
+                var method = usePassword ? "contraseña" : 
+                           useRecoveryPhrase ? "frase de recuperación" : 
+                           "certificado PKI";
                 CustomMessageBox.ShowSuccess($"El archivo se ha desencriptado correctamente usando {method}.\n\nUbicación: {output}", "Desencriptación Completada", this);
             }
             catch (OperationCanceledException)
@@ -811,15 +848,6 @@ namespace FileEncrypter
 
         #region Recovery Phrase Interface
 
-        private void DecryptionMethod_Changed(object sender, RoutedEventArgs e)
-        {
-            if (PasswordDecryptPanel == null || RecoveryPhraseDecryptPanel == null) return;
-
-            bool usePassword = UsePasswordRadio?.IsChecked == true;
-            
-            PasswordDecryptPanel.Visibility = usePassword ? Visibility.Visible : Visibility.Collapsed;
-            RecoveryPhraseDecryptPanel.Visibility = usePassword ? Visibility.Collapsed : Visibility.Visible;
-        }
 
         private void DecryptRecoveryPhrase_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -902,6 +930,258 @@ namespace FileEncrypter
             });
         }
 
+        #endregion
+        
+        #region PKI Certificate Methods
+        
+        private async Task EncryptFileWithCertificate(CertificateInfo certificateInfo)
+        {
+            var dlg = new OpenFileDialog();
+            if (dlg.ShowDialog() != true) return;
+
+            var input = dlg.FileName;
+            var dir = Path.GetDirectoryName(input) ?? Environment.CurrentDirectory;
+            var hashName = HashHelper.ComputeHash(Path.GetFileName(input));
+            var output = Path.Combine(dir, hashName + ".pki");
+
+            _cts = new CancellationTokenSource();
+            ProgressBar.Value = 0;
+            ProgressSection.Visibility = Visibility.Visible;
+            CancelButton.IsEnabled = true;
+
+            IProgress<double> progress = new Progress<double>(pct => 
+            {
+                ProgressBar.Value = pct;
+            });
+            
+            try
+            {
+                var fileData = await File.ReadAllBytesAsync(input, _cts.Token);
+                
+                // Crear estructura de archivo PKI con metadatos
+                var pkiData = new PKIFileData
+                {
+                    OriginalFileName = Path.GetFileName(input),
+                    EncryptedContent = _certificateService.EncryptWithCertificate(fileData, certificateInfo.Certificate),
+                    CertificateThumbprint = certificateInfo.Thumbprint,
+                    EncryptedDate = DateTime.UtcNow
+                };
+                
+                var serializedData = SerializePKIData(pkiData);
+                await File.WriteAllBytesAsync(output, serializedData, _cts.Token);
+                
+                progress.Report(100);
+                
+                // Agregar al historial
+                var fileInfo = new FileInfo(input);
+                await HistoryService.AddEncryptionEntryAsync(input, output, fileInfo.Length);
+                
+                NotificationService.ShowEncryptionSuccess(Path.GetFileName(input), output, "");
+                CustomMessageBox.ShowSuccess($"El archivo se ha encriptado correctamente usando certificado PKI.\n\nUbicación: {output}", "Encriptación Completada", this);
+
+                if (DeleteOriginalCheckBox?.IsChecked == true)
+                {
+                    try
+                    {
+                        File.Delete(input);
+                    }
+                    catch (Exception ex)
+                    {
+                        CustomMessageBox.ShowError($"Error eliminando archivo original: {ex.Message}", "Error", this);
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                NotificationService.ShowWarning("Operación Cancelada", "La encriptación fue cancelada por el usuario.");
+                CustomMessageBox.ShowWarning("La operación de encriptación fue cancelada por el usuario.", "Operación Cancelada", this);
+            }
+            catch (Exception ex)
+            {
+                NotificationService.ShowError("Error de Encriptación", $"Error procesando {Path.GetFileName(input)}: {ex.Message}");
+                CustomMessageBox.ShowError($"Ocurrió un error durante la encriptación:\n\n{ex.Message}", "Error de Encriptación", this);
+            }
+            finally
+            {
+                ProgressSection.Visibility = Visibility.Collapsed;
+                CancelButton.IsEnabled = false;
+                _cts?.Dispose();
+                _cts = null;
+            }
+        }
+        
+        private async Task<string> DecryptFileWithCertificateAsync(string inputPath, CertificateInfo certificateInfo, string outputDir, IProgress<double> progress, CancellationToken cancellationToken)
+        {
+            var fileData = await File.ReadAllBytesAsync(inputPath, cancellationToken);
+            var pkiData = DeserializePKIData(fileData);
+            
+            // Verificar que el certificado coincida
+            if (pkiData.CertificateThumbprint != certificateInfo.Thumbprint)
+            {
+                throw new InvalidOperationException("El certificado seleccionado no corresponde con el usado para encriptar este archivo.");
+            }
+            
+            var decryptedData = _certificateService.DecryptWithCertificate(pkiData.EncryptedContent, certificateInfo.Certificate);
+            
+            var outputPath = Path.Combine(outputDir, pkiData.OriginalFileName);
+            
+            // Si el archivo ya existe, agregar un sufijo
+            if (File.Exists(outputPath))
+            {
+                var nameWithoutExt = Path.GetFileNameWithoutExtension(pkiData.OriginalFileName);
+                var extension = Path.GetExtension(pkiData.OriginalFileName);
+                var counter = 1;
+                
+                do
+                {
+                    outputPath = Path.Combine(outputDir, $"{nameWithoutExt}_({counter}){extension}");
+                    counter++;
+                } while (File.Exists(outputPath));
+            }
+            
+            await File.WriteAllBytesAsync(outputPath, decryptedData, cancellationToken);
+            progress.Report(100);
+            
+            return outputPath;
+        }
+        
+        private void SelectCertificate_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var certWindow = new CertificateSelectionWindow
+                {
+                    Owner = this
+                };
+                
+                if (certWindow.ShowDialog() == true)
+                {
+                    _selectedEncryptCertificate = certWindow.SelectedCertificate;
+                    if (_selectedEncryptCertificate != null)
+                    {
+                        SelectedCertificateTextBox.Text = _selectedEncryptCertificate.FriendlyName;
+                        CertificateInfoText.Text = $"Válido hasta: {_selectedEncryptCertificate.ValidTo:dd/MM/yyyy}";
+                        CertificateInfoText.Foreground = new SolidColorBrush(Color.FromRgb(16, 185, 129)); // Verde
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                CustomMessageBox.ShowError($"Error al seleccionar certificado: {ex.Message}", "Error", this);
+            }
+        }
+        
+        private void SelectDecryptCertificate_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var certWindow = new CertificateSelectionWindow
+                {
+                    Owner = this
+                };
+                
+                if (certWindow.ShowDialog() == true)
+                {
+                    _selectedDecryptCertificate = certWindow.SelectedCertificate;
+                    if (_selectedDecryptCertificate != null)
+                    {
+                        DecryptCertificateTextBox.Text = _selectedDecryptCertificate.FriendlyName;
+                        
+                        if (!_selectedDecryptCertificate.HasPrivateKey)
+                        {
+                            CustomMessageBox.ShowWarning("El certificado seleccionado no tiene clave privada. Se requiere la clave privada para desencriptar.", "Advertencia", this);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                CustomMessageBox.ShowError($"Error al seleccionar certificado: {ex.Message}", "Error", this);
+            }
+        }
+        
+        private void EncryptionMethod_Changed(object sender, RoutedEventArgs e)
+        {
+            if (PasswordEncryptPanel == null || CertificateEncryptPanel == null || SecurityTipsText == null) return;
+
+            bool usePassword = UsePasswordEncryptRadio?.IsChecked == true;
+            
+            PasswordEncryptPanel.Visibility = usePassword ? Visibility.Visible : Visibility.Collapsed;
+            CertificateEncryptPanel.Visibility = usePassword ? Visibility.Collapsed : Visibility.Visible;
+            
+            // Actualizar consejos de seguridad
+            if (usePassword)
+            {
+                SecurityTipsText.Text = "• Mínimo 12 caracteres\n• Se genera frase de recuperación";
+            }
+            else
+            {
+                SecurityTipsText.Text = "• Certificado PKI para máxima seguridad\n• Requiere clave privada para desencriptar";
+            }
+        }
+        
+        private void DecryptionMethod_Changed(object sender, RoutedEventArgs e)
+        {
+            if (PasswordDecryptPanel == null || RecoveryPhraseDecryptPanel == null || CertificateDecryptPanel == null) return;
+
+            bool usePassword = UsePasswordRadio?.IsChecked == true;
+            bool useRecoveryPhrase = UseRecoveryPhraseRadio?.IsChecked == true;
+            bool useCertificate = UseCertificateDecryptRadio?.IsChecked == true;
+            
+            PasswordDecryptPanel.Visibility = usePassword ? Visibility.Visible : Visibility.Collapsed;
+            RecoveryPhraseDecryptPanel.Visibility = useRecoveryPhrase ? Visibility.Visible : Visibility.Collapsed;
+            CertificateDecryptPanel.Visibility = useCertificate ? Visibility.Visible : Visibility.Collapsed;
+        }
+        
+        #region PKI Data Serialization
+        
+        private class PKIFileData
+        {
+            public string OriginalFileName { get; set; }
+            public string EncryptedContent { get; set; }
+            public string CertificateThumbprint { get; set; }
+            public DateTime EncryptedDate { get; set; }
+        }
+        
+        private byte[] SerializePKIData(PKIFileData data)
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(data);
+            var jsonBytes = Encoding.UTF8.GetBytes(json);
+            
+            // Agregar un encabezado para identificar archivos PKI
+            var header = Encoding.UTF8.GetBytes("FILEENC_PKI_V1");
+            var result = new byte[header.Length + jsonBytes.Length];
+            
+            Array.Copy(header, 0, result, 0, header.Length);
+            Array.Copy(jsonBytes, 0, result, header.Length, jsonBytes.Length);
+            
+            return result;
+        }
+        
+        private PKIFileData DeserializePKIData(byte[] data)
+        {
+            var header = Encoding.UTF8.GetBytes("FILEENC_PKI_V1");
+            
+            if (data.Length < header.Length)
+                throw new InvalidDataException("El archivo no es un archivo PKI válido.");
+            
+            // Verificar encabezado
+            for (int i = 0; i < header.Length; i++)
+            {
+                if (data[i] != header[i])
+                    throw new InvalidDataException("El archivo no es un archivo PKI válido.");
+            }
+            
+            var jsonBytes = new byte[data.Length - header.Length];
+            Array.Copy(data, header.Length, jsonBytes, 0, jsonBytes.Length);
+            
+            var json = Encoding.UTF8.GetString(jsonBytes);
+            return System.Text.Json.JsonSerializer.Deserialize<PKIFileData>(json) ?? 
+                   throw new InvalidDataException("Error al deserializar datos PKI.");
+        }
+        
+        #endregion
+        
         #endregion
     }
 }
