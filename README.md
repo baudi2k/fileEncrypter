@@ -1,7 +1,31 @@
-# 🔐 FileEncrypter Pro
+# 🔐 FileEncrypter Pro v1.1.0
 
-Una aplicación moderna y segura para encriptar archivos con AES-256, desarrollada en WPF con .NET 8. Protege tus archivos importantes con encriptación de nivel militar y un sistema de recuperación único basado en frases mnemónicas.
+Una aplicación moderna y segura para encriptar archivos con AES-256, desarrollada en WPF con .NET 8. Protege tus archivos importantes con encriptación de nivel militar y un sistema de recuperación único basado en frases mnemónicas. Incluye notificaciones nativas de Windows y soporte completo para certificados digitales.
 
+## 🚀 Novedades en v1.1.0
+
+### 🆕 **Certificados Digitales**
+- **Encriptación Asimétrica**: Protege archivos con certificados X.509
+- **Gestión Integrada**: Crea y administra certificados directamente en la app
+- **Almacén de Windows**: Integración completa con el almacén de certificados del sistema
+- **Múltiples Proveedores**: Soporte para certificados RSA y ECDSA
+
+### 🔔 **Notificaciones Mejoradas**
+- **Centro de Actividades**: Integración completa con Windows Action Center
+- **Acciones Interactivas**: Botones para abrir archivos, carpetas y copiar frases
+- **Progreso en Tiempo Real**: Barras de progreso detalladas durante operaciones
+- **Recordatorios Inteligentes**: Notificaciones de seguridad y recuperación
+
+### 📦 **Instalador Profesional**
+- **Standalone Completo**: Incluye .NET 8 runtime (sin instalación adicional)
+- **Instalación Automática**: Configuración completa en un solo paso
+- **Desinstalador Integrado**: Limpieza completa del sistema
+- **Registro en Windows**: Aparece en Programas y Características
+
+### ⚡ **Mejoras de Rendimiento**
+- **Procesamiento Asíncrono**: Operaciones no bloqueantes mejoradas
+- **Optimización de Memoria**: Mejor uso de recursos del sistema
+- **Validación Mejorada**: Detección más rápida de archivos corruptos
 
 ## ✨ Características Principales
 
@@ -15,8 +39,10 @@ Una aplicación moderna y segura para encriptar archivos con AES-256, desarrolla
 - **Drag & Drop**: Arrastra archivos directamente para encriptar/desencriptar
 - **Generador de Contraseñas**: Crea contraseñas seguras con análisis de fortaleza
 - **Historial Completo**: Rastrea todas las operaciones con estadísticas
-- **Notificaciones Nativas**: Integración con el sistema de notificaciones de Windows
+- **Notificaciones Nativas**: Integración completa con el Centro de Actividades de Windows
 - **Interfaz Intuitiva**: Diseño moderno con modo oscuro
+- **Soporte de Certificados**: Encriptación/desencriptación con certificados X.509
+- **Gestión de Certificados**: Selección y generación de certificados digitales
 
 ### 💼 Gestión de Archivos
 - **Compatibilidad Universal**: Funciona con cualquier tipo de archivo
@@ -33,8 +59,14 @@ Una aplicación moderna y segura para encriptar archivos con AES-256, desarrolla
 
 ### Descarga
 1. Ve a la sección [Releases](https://github.com/tu-usuario/fileencrypter/releases)
-2. Descarga la última versión disponible
+2. Descarga **FileEncrypter-Setup.exe** (v1.1.0)
 3. Ejecuta el instalador y sigue las instrucciones
+4. La aplicación se instala automáticamente con todas las dependencias incluidas
+
+### Instalador Standalone
+- **Tamaño**: ~72 MB (incluye .NET 8 runtime completo)
+- **Requisitos**: Windows 10/11 (sin necesidad de instalar .NET por separado)
+- **Instalación automática**: Crea accesos directos y registra en Windows
 
 ### Compilación desde Código Fuente
 ```bash
@@ -66,7 +98,14 @@ dotnet run
 2. Elige tu método de desencriptación:
    - **Contraseña**: Usa la contraseña original
    - **Frase de Recuperación**: Usa las 12 palabras generadas
+   - **Certificado**: Selecciona el certificado digital usado para encriptar
 3. Haz clic en "Desencriptar Archivo"
+
+### Usar Certificados Digitales
+1. **Generar Certificado**: Ve a "Herramientas > Generar Certificado"
+2. **Seleccionar Certificado**: Elige un certificado existente del almacén de Windows
+3. **Encriptar con Certificado**: Selecciona el método de certificado en la pestaña de encriptación
+4. **Desencriptar**: El certificado se detecta automáticamente del archivo encriptado
 
 ### Ver Historial
 - Haz clic en "Historial" para ver todas tus operaciones
@@ -76,9 +115,10 @@ dotnet run
 ## 🔧 Características Técnicas
 
 ### Algoritmos de Seguridad
-- **Encriptación**: AES-256-CBC
+- **Encriptación**: AES-256-CBC con múltiples modos de operación
 - **Derivación de Claves**: PBKDF2 con SHA-256 (100,000 iteraciones)
 - **Generación de Salt**: RandomNumberGenerator criptográficamente seguro
+- **Certificados Digitales**: Soporte completo para X.509 con RSA/ECDSA
 - **Frases de Recuperación**: Basadas en wordlist española (similar a BIP39)
 
 ### Arquitectura
@@ -121,10 +161,11 @@ FileEncrypter/
 
 ## 📊 Estadísticas del Proyecto
 
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/tu-usuario/fileencrypter)
-![GitHub](https://img.shields.io/github/license/tu-usuario/fileencrypter)
-![GitHub top language](https://img.shields.io/github/languages/top/tu-usuario/fileencrypter)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/tu-usuario/fileencrypter)
+![Versión](https://img.shields.io/badge/versión-1.1.0-blue.svg)
+![.NET](https://img.shields.io/badge/.NET-8.0-512BD4.svg)
+![Windows](https://img.shields.io/badge/Windows-10/11-0078D4.svg)
+![Licencia](https://img.shields.io/badge/licencia-MIT-green.svg)
+![C#](https://img.shields.io/badge/C%23-100%25-239120.svg)
 
 ## 🤝 Contribuir
 
@@ -146,18 +187,29 @@ FileEncrypter/
 
 ## 📝 Changelog
 
-### [v2.0.0] - 2024-XX-XX
-- ✨ Sistema de frases de recuperación de 12 palabras
-- 🔄 Compatibilidad con archivos legacy
-- 🎨 Interfaz rediseñada con modo oscuro
-- 📊 Dashboard de historial mejorado
-- 🔔 Notificaciones nativas de Windows
+### [v1.1.0] - 2024-12-XX ✨ **Versión Actual**
+- 🆕 **Soporte completo para certificados digitales X.509**
+- 🆕 **Sistema de gestión de certificados integrado**
+- 🆕 **Generación de certificados personalizados**
+- 🆕 **Notificaciones nativas mejoradas con acciones interactivas**
+- 🆕 **Instalador standalone autocontenido (.NET incluido)**
+- 🔧 **Mejoras en el rendimiento de encriptación**
+- 🐛 **Corrección de bugs menores**
+- 📚 **Documentación actualizada**
 
 ### [v1.0.0] - 2024-XX-XX
 - 🚀 Lanzamiento inicial
+- 🔐 Encriptación AES-256 con frases de recuperación
+- 💻 Interfaz WPF moderna con drag & drop
+- 📱 Generador de contraseñas con análisis de fortaleza
+- 📊 Sistema de historial completo
+- 🔔 Notificaciones nativas de Windows
+- 🎨 Diseño moderno con modo oscuro
+
+### [v0.9.0] - 2024-XX-XX (Beta)
+- 🧪 Versión beta con funcionalidades core
 - 🔐 Encriptación AES-256 básica
-- 💻 Interfaz WPF moderna
-- 📱 Generador de contraseñas
+- 💻 Interfaz WPF inicial
 
 ## 📄 Licencia
 
