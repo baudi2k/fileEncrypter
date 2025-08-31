@@ -213,7 +213,7 @@ FileEncrypter/
 
 ## 📄 Licencia
 
-Este proyecto está licenciado bajo la Licencia MIT - ve el archivo [LICENSE](LICENSE) para detalles.
+Este proyecto está licenciado bajo la Licencia MIT - ve el archivo [LICENSE](https://github.com/baudi2k/fileEncrypter/blob/main/LICENSE) para detalles.
 
 ## 🙏 Agradecimientos
 
