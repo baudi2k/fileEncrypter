@@ -205,7 +205,12 @@ namespace FileEncrypter
                 certificate = _selectedDecryptCertificate;
             }
 
-            var dlg = new OpenFileDialog { Filter = "Archivos (*.enc)|*.enc" };
+            // Filtrar archivos según el método de desencriptación seleccionado
+            string filter = useCertificate ? 
+                "Archivos encriptados (*.enc;*.pki)|*.enc;*.pki|Archivos .enc|*.enc|Archivos .pki|*.pki" : 
+                "Archivos encriptados (*.enc)|*.enc";
+            
+            var dlg = new OpenFileDialog { Filter = filter };
             if (dlg.ShowDialog() != true) return;
 
             var input = dlg.FileName;
@@ -339,11 +344,12 @@ namespace FileEncrypter
                 if (files.Length > 0)
                 {
                     string filePath = files[0]; // Procesar solo el primer archivo
-                    bool isEncFile = Path.GetExtension(filePath).ToLower() == ".enc";
+                    var fileExtension = Path.GetExtension(filePath).ToLower();
+                    bool isEncryptedFile = fileExtension == ".enc" || fileExtension == ".pki";
 
                     // Determinar qué contraseña usar según la sección actual
                     string pwd;
-                    if (_currentSection == "Encrypt" && !isEncFile)
+                    if (_currentSection == "Encrypt" && !isEncryptedFile)
                     {
                         pwd = _isEncryptPasswordVisible ? (_encryptPasswordTextBox?.Text ?? "") : EncryptPasswordInput.Password;
                         if (string.IsNullOrWhiteSpace(pwd))
@@ -354,26 +360,49 @@ namespace FileEncrypter
                         bool deleteOriginal = DeleteOriginalCheckBox?.IsChecked == true;
                         await ProcessEncryptFile(filePath, pwd, deleteOriginal);
                     }
-                    else if (_currentSection == "Decrypt" && isEncFile)
+                    else if (_currentSection == "Decrypt" && isEncryptedFile)
                     {
-                        pwd = _isDecryptPasswordVisible ? (_decryptPasswordTextBox?.Text ?? "") : DecryptPasswordInput.Password;
-                        if (string.IsNullOrWhiteSpace(pwd))
+                        // Determinar si es archivo .pki para usar certificado
+                        if (fileExtension == ".pki")
                         {
-                            CustomMessageBox.ShowWarning("Por favor, ingrese una contraseña de desencriptación antes de procesar el archivo.", "Contraseña Requerida", this);
-                            return;
+                            // Para archivos .pki, verificar si hay certificado seleccionado
+                            bool useCertificate = UseCertificateDecryptRadio?.IsChecked == true;
+                            if (!useCertificate)
+                            {
+                                CustomMessageBox.ShowWarning("Para desencriptar archivos .pki, debe seleccionar 'Usar Certificado PKI' en el método de desencriptación.", "Método Incorrecto", this);
+                                return;
+                            }
+                            
+                            if (_selectedDecryptCertificate == null)
+                            {
+                                CustomMessageBox.ShowWarning("Por favor, seleccione un certificado para desencriptar archivos .pki.", "Certificado Requerido", this);
+                                return;
+                            }
+                            
+                            await ProcessDecryptFileWithCertificateAsync(filePath, _selectedDecryptCertificate);
                         }
-                        await ProcessDecryptFile(filePath, pwd);
+                        else
+                        {
+                            // Para archivos .enc usar contraseña
+                            pwd = _isDecryptPasswordVisible ? (_decryptPasswordTextBox?.Text ?? "") : DecryptPasswordInput.Password;
+                            if (string.IsNullOrWhiteSpace(pwd))
+                            {
+                                CustomMessageBox.ShowWarning("Por favor, ingrese una contraseña de desencriptación antes de procesar el archivo.", "Contraseña Requerida", this);
+                                return;
+                            }
+                            await ProcessDecryptFileAsync(filePath, pwd);
+                        }
                     }
                     else
                     {
                         // Archivo no corresponde a la sección actual
-                        if (isEncFile && _currentSection == "Encrypt")
+                        if (isEncryptedFile && _currentSection == "Encrypt")
                         {
-                            CustomMessageBox.ShowWarning("Los archivos .enc deben ser arrastrados en la sección 'Desencriptar'.", "Archivo Incorrecto", this);
+                            CustomMessageBox.ShowWarning("Los archivos encriptados (.enc/.pki) deben ser arrastrados en la sección 'Desencriptar'.", "Archivo Incorrecto", this);
                         }
-                        else if (!isEncFile && _currentSection == "Decrypt")
+                        else if (!isEncryptedFile && _currentSection == "Decrypt")
                         {
-                            CustomMessageBox.ShowWarning("Para desencriptar, debe arrastrar archivos con extensión .enc.", "Archivo Incorrecto", this);
+                            CustomMessageBox.ShowWarning("Para desencriptar, debe arrastrar archivos encriptados (.enc o .pki).", "Archivo Incorrecto", this);
                         }
                     }
                 }
@@ -1256,6 +1285,109 @@ namespace FileEncrypter
             var json = Encoding.UTF8.GetString(jsonBytes);
             return System.Text.Json.JsonSerializer.Deserialize<PKIFileData>(json) ?? 
                    throw new InvalidDataException("Error al deserializar datos PKI.");
+        }
+        
+        #endregion
+        
+        #region Drag & Drop Helper Methods
+        
+        private async Task ProcessDecryptFileAsync(string filePath, string password)
+        {
+            var dir = Path.GetDirectoryName(filePath) ?? Environment.CurrentDirectory;
+            
+            _cts = new CancellationTokenSource();
+            ProgressBar.Value = 0;
+            ProgressSection.Visibility = Visibility.Visible;
+            CancelButton.IsEnabled = true;
+
+            IProgress<double> progress = new Progress<double>(pct => 
+            {
+                ProgressBar.Value = pct;
+            });
+            
+            try
+            {
+                string output = await EncryptionService.DecryptFileAsync(filePath, password, dir, progress, _cts.Token);
+                
+                // Marcar como desencriptado en el historial
+                await HistoryService.MarkAsDecryptedAsync(filePath, output);
+                
+                NotificationService.ShowDecryptionSuccess(Path.GetFileName(output), output);
+                CustomMessageBox.ShowSuccess($"El archivo se ha desencriptado correctamente.\n\nUbicación: {output}", "Desencriptación Completada", this);
+            }
+            catch (OperationCanceledException)
+            {
+                NotificationService.ShowWarning("Operación Cancelada", "La desencriptación fue cancelada por el usuario.");
+                CustomMessageBox.ShowWarning("La operación de desencriptación fue cancelada por el usuario.", "Operación Cancelada", this);
+            }
+            catch (CryptographicException ex)
+            {
+                if (ex.Message.Contains("frase de recuperación"))
+                {
+                    NotificationService.ShowError("Frase de Recuperación Incorrecta", "La frase de recuperación ingresada no es válida.");
+                    CustomMessageBox.ShowError("Frase de recuperación incorrecta o archivo corrupto.", "Error de Desencriptación", this);
+                }
+                else
+                {
+                    NotificationService.ShowError("Contraseña Incorrecta", "La contraseña ingresada no es válida para este archivo.");
+                    CustomMessageBox.ShowPasswordError(this);
+                }
+            }
+            catch (Exception ex)
+            {
+                NotificationService.ShowError("Error de Desencriptación", $"Error procesando {Path.GetFileName(filePath)}: {ex.Message}");
+                CustomMessageBox.ShowError($"Ocurrió un error durante la desencriptación:\n\n{ex.Message}", "Error de Desencriptación", this);
+            }
+            finally
+            {
+                ProgressSection.Visibility = Visibility.Collapsed;
+                CancelButton.IsEnabled = false;
+                _cts?.Dispose();
+                _cts = null;
+            }
+        }
+
+        private async Task ProcessDecryptFileWithCertificateAsync(string filePath, CertificateInfo certificateInfo)
+        {
+            var dir = Path.GetDirectoryName(filePath) ?? Environment.CurrentDirectory;
+            
+            _cts = new CancellationTokenSource();
+            ProgressBar.Value = 0;
+            ProgressSection.Visibility = Visibility.Visible;
+            CancelButton.IsEnabled = true;
+
+            IProgress<double> progress = new Progress<double>(pct => 
+            {
+                ProgressBar.Value = pct;
+            });
+            
+            try
+            {
+                string output = await DecryptFileWithCertificateAsync(filePath, certificateInfo, dir, progress, _cts.Token);
+                
+                // Marcar como desencriptado en el historial
+                await HistoryService.MarkAsDecryptedAsync(filePath, output);
+                
+                NotificationService.ShowDecryptionSuccess(Path.GetFileName(output), output);
+                CustomMessageBox.ShowSuccess($"El archivo se ha desencriptado correctamente usando certificado PKI.\n\nUbicación: {output}", "Desencriptación Completada", this);
+            }
+            catch (OperationCanceledException)
+            {
+                NotificationService.ShowWarning("Operación Cancelada", "La desencriptación fue cancelada por el usuario.");
+                CustomMessageBox.ShowWarning("La operación de desencriptación fue cancelada por el usuario.", "Operación Cancelada", this);
+            }
+            catch (Exception ex)
+            {
+                NotificationService.ShowError("Error de Desencriptación", $"Error procesando {Path.GetFileName(filePath)}: {ex.Message}");
+                CustomMessageBox.ShowError($"Ocurrió un error durante la desencriptación:\n\n{ex.Message}", "Error de Desencriptación", this);
+            }
+            finally
+            {
+                ProgressSection.Visibility = Visibility.Collapsed;
+                CancelButton.IsEnabled = false;
+                _cts?.Dispose();
+                _cts = null;
+            }
         }
         
         #endregion
