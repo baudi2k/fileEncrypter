@@ -75,95 +75,99 @@
 
                 <!-- Encrypt Section -->
                 <StackPanel x:Name="EncryptSection" Visibility="Visible">
-                    <TextBlock Text="🔒 Encriptar Archivos" Style="{StaticResource SectionHeader}"/>
-
-                    <!-- Password Card for Encryption -->
-                    <Border Style="{StaticResource Card}">
-                        <StackPanel Style="{StaticResource InputContainer}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <TextBlock 
-                                    Grid.Column="0"
-                                    Text="🔑 Contraseña de Encriptación" 
-                                    Style="{StaticResource SectionTitle}"/>
-                                
-                                <Button 
-                                    Grid.Column="1"
-                                    x:Name="ToggleGeneratorButton"
-                                    Content="🎲 Generar"
-                                    Style="{StaticResource SmallButton}"
-                                    Click="ToggleGenerator_Click"
-                                    VerticalAlignment="Center"
-                                    Margin="0"/>
-                            </Grid>
-                            
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <PasswordBox 
-                                    Grid.Column="0"
-                                    x:Name="EncryptPasswordInput" 
-                                    Style="{StaticResource ModernPasswordBox}"
-                                    ToolTip="Ingrese una contraseña segura"
-                                    PasswordChanged="EncryptPasswordInput_PasswordChanged"/>
-                                
-                                <Button 
-                                    Grid.Column="1"
-                                    x:Name="ShowEncryptPasswordButton"
-                                    Content="👁️"
-                                    Style="{StaticResource SmallButton}"
-                                    Click="ShowEncryptPassword_Click"
-                                    VerticalAlignment="Center"
-                                    Margin="8,0,0,0"/>
-                            </Grid>
-
-                            <!-- Password Strength Indicator -->
-                            <StackPanel x:Name="EncryptStrengthIndicator" Margin="0,8,0,0">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    
-                                    <ProgressBar 
-                                        x:Name="EncryptStrengthBar"
-                                        Grid.Column="0"
-                                        Height="4"
-                                        Background="#FF374151"
-                                        BorderThickness="0"
-                                        Value="0"
-                                        Maximum="100"/>
-                                    
-                                    <TextBlock 
-                                        x:Name="EncryptStrengthText"
-                                        Grid.Column="1"
-                                        Text="Débil"
-                                        FontSize="12"
-                                        Margin="8,0,0,0"
-                                        VerticalAlignment="Center"/>
-                                </Grid>
-                            </StackPanel>
-
-                            <!-- Password Generator -->
-                            <Border x:Name="PasswordGenerator" 
-                                    Style="{StaticResource PasswordGeneratorCard}" 
-                                    Visibility="Collapsed">
+                    <TextBlock Text="🔒 Encriptar Archivos" Style="{StaticResource SectionHeader}" Margin="0,0,0,16"/>
+                    
+                    <!-- Main Layout Grid -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Left Column -->
+                        <StackPanel Grid.Column="0">
+                            <!-- File Selection & Drop Zone -->
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
                                 <StackPanel>
                                     <TextBlock 
-                                        Text="⚙️ Configuración del Generador" 
-                                        FontSize="14" 
-                                        FontWeight="SemiBold" 
-                                        Foreground="{StaticResource OnSurfaceBrush}"
+                                        Text="📂 Seleccionar Archivo" 
+                                        Style="{StaticResource SectionTitle}" 
                                         Margin="0,0,0,12"/>
+                                    
+                                    <Grid x:Name="EncryptDropZone" Height="100" Margin="0,0,0,12">
+                                        <Rectangle 
+                                            Stroke="{StaticResource AccentBrush}" 
+                                            StrokeThickness="2" 
+                                            StrokeDashArray="8,4" 
+                                            RadiusX="8" 
+                                            RadiusY="8"
+                                            Fill="Transparent"/>
+                                        
+                                        <StackPanel 
+                                            HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center">
+                                            <TextBlock 
+                                                Text="📁" 
+                                                FontSize="24" 
+                                                HorizontalAlignment="Center" 
+                                                Foreground="{StaticResource AccentBrush}"
+                                                Margin="0,0,0,4"/>
+                                            <TextBlock 
+                                                Text="Arrastra archivos aquí" 
+                                                FontSize="14" 
+                                                FontWeight="SemiBold"
+                                                HorizontalAlignment="Center" 
+                                                Foreground="{StaticResource OnSurfaceBrush}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    
+                                    <Button
+                                        Content="📁 Seleccionar Archivo"
+                                        Style="{StaticResource AccentButton}"
+                                        Click="EncryptFile_Click"
+                                        HorizontalAlignment="Stretch"
+                                        Margin="0,0,0,8"/>
+                                        
+                                    <CheckBox
+                                        x:Name="DeleteOriginalCheckBox"
+                                        Content="Eliminar archivo original"
+                                        Style="{StaticResource ModernCheckBox}"
+                                        HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- Password Generator Toggle -->
+                            <Border x:Name="PasswordGenerator" 
+                                    Style="{StaticResource Card}" 
+                                    Background="#FF1A2332"
+                                    BorderBrush="{StaticResource AccentBrush}"
+                                    BorderThickness="1"
+                                    Visibility="Collapsed"
+                                    Margin="0,0,0,12">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock 
+                                            Grid.Column="0"
+                                            Text="🎲 Generador" 
+                                            FontSize="16" 
+                                            FontWeight="Bold" 
+                                            Foreground="{StaticResource AccentBrush}"/>
+                                        
+                                        <Button 
+                                            Grid.Column="1"
+                                            Content="❌"
+                                            Style="{StaticResource SmallButton}"
+                                            Click="ToggleGenerator_Click"
+                                            Background="#FF374151"/>
+                                    </Grid>
 
-                                    <!-- Length Control -->
+                                    <!-- Compact Generator Controls -->
                                     <Grid Margin="0,0,0,12">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
@@ -176,72 +180,79 @@
                                             Text="Longitud:" 
                                             Foreground="{StaticResource OnSurfaceBrush}"
                                             VerticalAlignment="Center"
-                                            Margin="0,0,12,0"/>
+                                            Margin="0,0,8,0"/>
                                         
                                         <Slider 
                                             Grid.Column="1"
                                             x:Name="LengthSlider"
                                             Style="{StaticResource ModernSlider}"
-                                            Minimum="4"
-                                            Maximum="32"
+                                            Minimum="8"
+                                            Maximum="24"
                                             Value="12"
                                             IsSnapToTickEnabled="True"
                                             TickFrequency="1"
-                                            ValueChanged="LengthSlider_ValueChanged"/>
+                                            ValueChanged="LengthSlider_ValueChanged"
+                                            Margin="0,0,8,0"/>
                                         
                                         <TextBlock 
                                             Grid.Column="2"
                                             x:Name="LengthValue"
                                             Text="12"
                                             Foreground="{StaticResource AccentBrush}"
-                                            FontWeight="SemiBold"
-                                            VerticalAlignment="Center"
-                                            Margin="12,0,0,0"/>
+                                            FontWeight="Bold"
+                                            VerticalAlignment="Center"/>
                                     </Grid>
 
-                                    <!-- Character Types -->
-                                    <TextBlock 
-                                        Text="Tipos de caracteres:"
-                                        Foreground="{StaticResource OnSurfaceBrush}"
-                                        FontSize="13"
-                                        Margin="0,0,0,8"/>
-
-                                    <StackPanel>
+                                    <!-- Compact Character Types -->
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        
                                         <CheckBox 
+                                            Grid.Row="0" Grid.Column="0"
                                             x:Name="IncludeUppercase"
-                                            Content="Mayúsculas (A-Z)"
+                                            Content="A-Z"
                                             Style="{StaticResource ModernCheckBox}"
                                             IsChecked="True"
                                             Checked="CharacterType_Changed"
                                             Unchecked="CharacterType_Changed"/>
                                         
                                         <CheckBox 
+                                            Grid.Row="0" Grid.Column="1"
                                             x:Name="IncludeLowercase"
-                                            Content="Minúsculas (a-z)"
+                                            Content="a-z"
                                             Style="{StaticResource ModernCheckBox}"
                                             IsChecked="True"
                                             Checked="CharacterType_Changed"
                                             Unchecked="CharacterType_Changed"/>
                                         
                                         <CheckBox 
+                                            Grid.Row="1" Grid.Column="0"
                                             x:Name="IncludeNumbers"
-                                            Content="Números (0-9)"
+                                            Content="0-9"
                                             Style="{StaticResource ModernCheckBox}"
                                             IsChecked="True"
                                             Checked="CharacterType_Changed"
                                             Unchecked="CharacterType_Changed"/>
                                         
                                         <CheckBox 
+                                            Grid.Row="1" Grid.Column="1"
                                             x:Name="IncludeSpecial"
-                                            Content="Caracteres especiales (!@#$%^&amp;*)"
+                                            Content="!@#$"
                                             Style="{StaticResource ModernCheckBox}"
                                             IsChecked="True"
                                             Checked="CharacterType_Changed"
                                             Unchecked="CharacterType_Changed"/>
-                                    </StackPanel>
+                                    </Grid>
 
                                     <!-- Generated Password Preview -->
-                                    <Grid Margin="0,12,0,12">
+                                    <Grid Margin="0,0,0,12">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
@@ -251,25 +262,25 @@
                                             Grid.Column="0"
                                             x:Name="GeneratedPasswordPreview"
                                             IsReadOnly="True"
-                                            Background="#FF374151"
-                                            Foreground="{StaticResource OnSurfaceBrush}"
-                                            BorderBrush="#FF4A4A4A"
+                                            Background="#FF0F1F35"
+                                            Foreground="White"
+                                            BorderBrush="{StaticResource AccentBrush}"
                                             BorderThickness="1"
                                             Padding="8"
                                             FontFamily="Consolas"
                                             FontSize="12"
-                                            Text="Haz clic en 'Generar' para crear una contraseña"/>
+                                            Text="Haz clic en Generar"/>
                                         
                                         <Button 
                                             Grid.Column="1"
                                             Content="📋"
                                             Style="{StaticResource SmallButton}"
                                             Click="CopyPassword_Click"
-                                            ToolTip="Copiar al portapapeles"
-                                            Margin="8,0,0,0"/>
+                                            ToolTip="Copiar"
+                                            Margin="4,0,0,0"/>
                                     </Grid>
 
-                                    <!-- Generate and Apply Buttons -->
+                                    <!-- Action Buttons -->
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
@@ -281,209 +292,321 @@
                                             Content="🎲 Generar"
                                             Style="{StaticResource AccentButton}"
                                             Click="GeneratePassword_Click"
-                                            Margin="0,0,6,0"/>
+                                            Margin="0,0,4,0"/>
                                         
                                         <Button 
                                             Grid.Column="1"
-                                            Content="✅ Usar esta"
-                                            Style="{StaticResource AccentButton}"
+                                            Content="✅ Usar"
+                                            Style="{StaticResource SuccessButton}"
                                             Click="UseGeneratedPassword_Click"
-                                            Margin="6,0,0,0"/>
+                                            Margin="4,0,0,0"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
-                    </Border>
+                        
+                        <!-- Right Column -->
+                        <StackPanel Grid.Column="2">
+                            <!-- Password Configuration -->
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock 
+                                            Grid.Column="0"
+                                            Text="🔐 Contraseña" 
+                                            Style="{StaticResource SectionTitle}"
+                                            Margin="0"/>
+                                        
+                                        <Button 
+                                            Grid.Column="1"
+                                            x:Name="ToggleGeneratorButton"
+                                            Content="🎲"
+                                            Style="{StaticResource SmallButton}"
+                                            Click="ToggleGenerator_Click"
+                                            ToolTip="Generar contraseña"/>
+                                    </Grid>
+                                    
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <PasswordBox 
+                                            Grid.Column="0"
+                                            x:Name="EncryptPasswordInput" 
+                                            Style="{StaticResource ModernPasswordBox}"
+                                            ToolTip="Ingrese una contraseña segura"
+                                            PasswordChanged="EncryptPasswordInput_PasswordChanged"/>
+                                        
+                                        <Button 
+                                            Grid.Column="1"
+                                            x:Name="ShowEncryptPasswordButton"
+                                            Content="👁️"
+                                            Style="{StaticResource SmallButton}"
+                                            Click="ShowEncryptPassword_Click"
+                                            VerticalAlignment="Center"
+                                            Margin="8,0,0,0"/>
+                                    </Grid>
 
-                    <!-- Encrypt Drag & Drop Card -->
-                    <Border Style="{StaticResource Card}">
-                        <StackPanel>
-                            <TextBlock 
-                                Text="📂 Arrastrar Archivos para Encriptar" 
-                                Style="{StaticResource SectionTitle}"/>
-                            
-                            <Grid x:Name="EncryptDropZone" Height="120" Margin="0,8,0,0">
-                                <Rectangle 
-                                    Stroke="{StaticResource AccentBrush}" 
-                                    StrokeThickness="2" 
-                                    StrokeDashArray="8,4" 
-                                    RadiusX="12" 
-                                    RadiusY="12"
-                                    Fill="Transparent"/>
-                                
-                                <StackPanel 
-                                    HorizontalAlignment="Center" 
-                                    VerticalAlignment="Center">
-                                    <TextBlock 
-                                        Text="📁" 
-                                        FontSize="32" 
-                                        HorizontalAlignment="Center" 
-                                        Foreground="{StaticResource AccentBrush}"
-                                        Margin="0,0,0,8"/>
-                                    <TextBlock 
-                                        Text="Arrastra archivos aquí para encriptar" 
-                                        FontSize="16" 
-                                        FontWeight="SemiBold"
-                                        HorizontalAlignment="Center" 
-                                        Foreground="{StaticResource OnSurfaceBrush}"
-                                        Margin="0,0,0,8"/>
-                                    <TextBlock 
-                                        Text="O haz clic en el botón de abajo" 
-                                        FontSize="12" 
-                                        HorizontalAlignment="Center" 
-                                        Foreground="{StaticResource AccentBrush}" 
-                                        Opacity="0.8"/>
+                                    <!-- Password Strength Indicator -->
+                                    <StackPanel x:Name="EncryptStrengthIndicator" Margin="0,0,0,12">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            
+                                            <ProgressBar 
+                                                x:Name="EncryptStrengthBar"
+                                                Grid.Column="0"
+                                                Height="4"
+                                                Background="#FF374151"
+                                                BorderThickness="0"
+                                                Value="0"
+                                                Maximum="100"
+                                                Style="{StaticResource ModernProgressBar}"/>
+                                            
+                                            <TextBlock 
+                                                x:Name="EncryptStrengthText"
+                                                Grid.Column="1"
+                                                Text="Débil"
+                                                FontSize="12"
+                                                FontWeight="SemiBold"
+                                                Margin="8,0,0,0"
+                                                VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </StackPanel>
+
+                                    <!-- Security Tips - Compact -->
+                                    <Border Background="#FF0F1F35" 
+                                            BorderBrush="#FF3B82F6" 
+                                            BorderThickness="1" 
+                                            CornerRadius="6" 
+                                            Padding="10">
+                                        <StackPanel>
+                                            <TextBlock 
+                                                Text="💡 Consejos" 
+                                                FontSize="12" 
+                                                FontWeight="SemiBold" 
+                                                Foreground="#FF3B82F6"
+                                                Margin="0,0,0,4"/>
+                                            <TextBlock 
+                                                Text="• Mínimo 12 caracteres"
+                                                FontSize="11"
+                                                Foreground="#FF93C5FD"
+                                                Margin="0,0,0,2"/>
+                                            <TextBlock 
+                                                Text="• Se genera frase de recuperación"
+                                                FontSize="11"
+                                                Foreground="#FF93C5FD"/>
+                                        </StackPanel>
+                                    </Border>
                                 </StackPanel>
-                            </Grid>
-
-                            <Button
-                                Content="📁 Seleccionar Archivo para Encriptar"
-                                Style="{StaticResource AccentButton}"
-                                Click="EncryptFile_Click"
-                                HorizontalAlignment="Center"
-                                Margin="0,16,0,0"/>
-
-                            <CheckBox
-                                x:Name="DeleteOriginalCheckBox"
-                                Content="Eliminar archivo original después de encriptar"
-                                Style="{StaticResource ModernCheckBox}"
-                                Margin="0,8,0,0"/>
+                            </Border>
                         </StackPanel>
-                    </Border>
+                    </Grid>
                 </StackPanel>
 
                 <!-- Decrypt Section -->
                 <StackPanel x:Name="DecryptSection" Visibility="Collapsed">
-                    <TextBlock Text="🔓 Desencriptar Archivos" Style="{StaticResource SectionHeader}"/>
-
-                    <!-- Password Card for Decryption -->
-                    <Border Style="{StaticResource Card}">
-                        <StackPanel Style="{StaticResource InputContainer}">
-                            <TextBlock 
-                                Text="🔑 Método de Desencriptación" 
-                                Style="{StaticResource SectionTitle}"/>
-                            
-                            <!-- Method Selection -->
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                                <RadioButton 
-                                    x:Name="UsePasswordRadio"
-                                    Content="Usar Contraseña"
-                                    IsChecked="True"
-                                    Checked="DecryptionMethod_Changed"
-                                    Foreground="{StaticResource OnSurfaceBrush}"
-                                    FontSize="14"
-                                    Margin="0,0,24,0"/>
-                                <RadioButton 
-                                    x:Name="UseRecoveryPhraseRadio"
-                                    Content="Usar Frase de Recuperación"
-                                    Checked="DecryptionMethod_Changed"
-                                    Foreground="{StaticResource OnSurfaceBrush}"
-                                    FontSize="14"/>
-                            </StackPanel>
-
-                            <!-- Password Input -->
-                            <StackPanel x:Name="PasswordDecryptPanel">
-                                <TextBlock 
-                                    Text="Contraseña:" 
-                                    FontSize="14"
-                                    Foreground="{StaticResource OnSurfaceBrush}"
-                                    Margin="0,0,0,8"/>
-                                
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="🔓 Desencriptar Archivos" Style="{StaticResource SectionHeader}" Margin="0,0,0,16"/>
+                    
+                    <!-- Main Layout Grid -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Left Column -->
+                        <StackPanel Grid.Column="0">
+                            <!-- File Selection & Drop Zone -->
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <TextBlock 
+                                        Text="📂 Seleccionar Archivo .enc" 
+                                        Style="{StaticResource SectionTitle}" 
+                                        Margin="0,0,0,12"/>
                                     
-                                    <PasswordBox 
-                                        Grid.Column="0"
-                                        x:Name="DecryptPasswordInput" 
-                                        Style="{StaticResource ModernPasswordBox}"
-                                        ToolTip="Ingrese la contraseña de desencriptación"/>
+                                    <Grid x:Name="DecryptDropZone" Height="100" Margin="0,0,0,12">
+                                        <Rectangle 
+                                            Stroke="#FFEF4444" 
+                                            StrokeThickness="2" 
+                                            StrokeDashArray="8,4" 
+                                            RadiusX="8" 
+                                            RadiusY="8"
+                                            Fill="Transparent"/>
+                                        
+                                        <StackPanel 
+                                            HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center">
+                                            <TextBlock 
+                                                Text="🔓" 
+                                                FontSize="24" 
+                                                HorizontalAlignment="Center" 
+                                                Foreground="#FFEF4444"
+                                                Margin="0,0,0,4"/>
+                                            <TextBlock 
+                                                Text="Arrastra archivos .enc aquí" 
+                                                FontSize="14" 
+                                                FontWeight="SemiBold"
+                                                HorizontalAlignment="Center" 
+                                                Foreground="{StaticResource OnSurfaceBrush}"/>
+                                        </StackPanel>
+                                    </Grid>
                                     
-                                    <Button 
-                                        Grid.Column="1"
-                                        x:Name="ShowDecryptPasswordButton"
-                                        Content="👁️"
-                                        Style="{StaticResource SmallButton}"
-                                        Click="ShowDecryptPassword_Click"
-                                        VerticalAlignment="Center"
-                                        Margin="8,0,0,0"/>
-                                </Grid>
-                            </StackPanel>
-
-                            <!-- Recovery Phrase Input -->
-                            <StackPanel x:Name="RecoveryPhraseDecryptPanel" Visibility="Collapsed">
-                                <TextBlock 
-                                    Text="Frase de Recuperación (12 palabras):" 
-                                    FontSize="14"
-                                    Foreground="{StaticResource OnSurfaceBrush}"
-                                    Margin="0,0,0,8"/>
-                                
-                                <TextBox 
-                                    x:Name="DecryptRecoveryPhraseInput"
-                                    Style="{StaticResource RecoveryPhraseInput}"
-                                    ToolTip="Ingrese las 12 palabras de la frase de recuperación separadas por espacios"
-                                    TextChanged="DecryptRecoveryPhrase_TextChanged"/>
-                                
-                                <TextBlock 
-                                    x:Name="RecoveryPhraseValidation"
-                                    Text="Ingrese las 12 palabras separadas por espacios"
-                                    Style="{StaticResource WarningText}"
-                                    Margin="0,4,0,0"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Decrypt Drag & Drop Card -->
-                    <Border Style="{StaticResource Card}">
-                        <StackPanel>
-                            <TextBlock 
-                                Text="📂 Arrastrar Archivos para Desencriptar" 
-                                Style="{StaticResource SectionTitle}"/>
-                            
-                            <Grid x:Name="DecryptDropZone" Height="120" Margin="0,8,0,0">
-                                <Rectangle 
-                                    Stroke="#FFEF4444" 
-                                    StrokeThickness="2" 
-                                    StrokeDashArray="8,4" 
-                                    RadiusX="12" 
-                                    RadiusY="12"
-                                    Fill="Transparent"/>
-                                
-                                <StackPanel 
-                                    HorizontalAlignment="Center" 
-                                    VerticalAlignment="Center">
-                                    <TextBlock 
-                                        Text="🔓" 
-                                        FontSize="32" 
-                                        HorizontalAlignment="Center" 
-                                        Foreground="#FFEF4444"
-                                        Margin="0,0,0,8"/>
-                                    <TextBlock 
-                                        Text="Arrastra archivos .enc aquí para desencriptar" 
-                                        FontSize="16" 
-                                        FontWeight="SemiBold"
-                                        HorizontalAlignment="Center" 
-                                        Foreground="{StaticResource OnSurfaceBrush}"
-                                        Margin="0,0,0,8"/>
-                                    <TextBlock 
-                                        Text="O haz clic en el botón de abajo" 
-                                        FontSize="12" 
-                                        HorizontalAlignment="Center" 
-                                        Foreground="#FFEF4444" 
-                                        Opacity="0.8"/>
+                                    <Button
+                                        Content="📁 Seleccionar Archivo .enc"
+                                        Style="{StaticResource AccentButton}"
+                                        Click="DecryptFile_Click"
+                                        HorizontalAlignment="Stretch"
+                                        Background="#FFEF4444"/>
                                 </StackPanel>
-                            </Grid>
-
-                            <Button 
-                                Content="🔓 Seleccionar Archivo .enc para Desencriptar"
-                                Style="{StaticResource AccentButton}"
-                                Click="DecryptFile_Click"
-                                HorizontalAlignment="Center"
-                                Margin="0,16,0,0"/>
+                            </Border>
+                            
+                            <!-- Info Card -->
+                            <Border Style="{StaticResource Card}" Background="#FF1A2332" Margin="0,0,0,0">
+                                <StackPanel>
+                                    <TextBlock 
+                                        Text="💡 Información" 
+                                        FontSize="16"
+                                        FontWeight="Bold"
+                                        Foreground="#FF60A5FA"
+                                        Margin="0,0,0,12"/>
+                                    
+                                    <StackPanel>
+                                        <TextBlock 
+                                            Text="• Puedes usar contraseña O frase de recuperación"
+                                            FontSize="12"
+                                            Foreground="#FFBFDBFE"
+                                            Margin="0,0,0,4"/>
+                                        <TextBlock 
+                                            Text="• Solo archivos con extensión .enc"
+                                            FontSize="12"
+                                            Foreground="#FFBFDBFE"
+                                            Margin="0,0,0,4"/>
+                                        <TextBlock 
+                                            Text="• La frase de recuperación son 12 palabras"
+                                            FontSize="12"
+                                            Foreground="#FFBFDBFE"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
-                    </Border>
+                        
+                        <!-- Right Column -->
+                        <StackPanel Grid.Column="2">
+                            <!-- Authentication Method -->
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <TextBlock 
+                                        Text="🔑 Método de Autenticación" 
+                                        Style="{StaticResource SectionTitle}"
+                                        Margin="0,0,0,12"/>
+                                    
+                                    <!-- Method Selection -->
+                                    <StackPanel Margin="0,0,0,16">
+                                        <RadioButton 
+                                            x:Name="UsePasswordRadio"
+                                            Content="🔐 Usar Contraseña"
+                                            IsChecked="True"
+                                            Checked="DecryptionMethod_Changed"
+                                            Foreground="{StaticResource OnSurfaceBrush}"
+                                            FontSize="14"
+                                            Margin="0,0,0,8"/>
+                                        <RadioButton 
+                                            x:Name="UseRecoveryPhraseRadio"
+                                            Content="📝 Usar Frase de Recuperación"
+                                            Checked="DecryptionMethod_Changed"
+                                            Foreground="{StaticResource OnSurfaceBrush}"
+                                            FontSize="14"/>
+                                    </StackPanel>
+
+                                    <!-- Password Input -->
+                                    <StackPanel x:Name="PasswordDecryptPanel">
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            
+                                            <PasswordBox 
+                                                Grid.Column="0"
+                                                x:Name="DecryptPasswordInput" 
+                                                Style="{StaticResource ModernPasswordBox}"
+                                                ToolTip="Ingrese la contraseña de desencriptación"/>
+                                            
+                                            <Button 
+                                                Grid.Column="1"
+                                                x:Name="ShowDecryptPasswordButton"
+                                                Content="👁️"
+                                                Style="{StaticResource SmallButton}"
+                                                Click="ShowDecryptPassword_Click"
+                                                VerticalAlignment="Center"
+                                                Margin="8,0,0,0"/>
+                                        </Grid>
+                                    </StackPanel>
+
+                                    <!-- Recovery Phrase Input -->
+                                    <StackPanel x:Name="RecoveryPhraseDecryptPanel" Visibility="Collapsed">
+                                        <TextBlock 
+                                            Text="Frase de Recuperación (12 palabras):" 
+                                            FontSize="13"
+                                            Foreground="{StaticResource OnSurfaceBrush}"
+                                            Margin="0,0,0,8"/>
+                                        
+                                        <TextBox 
+                                            x:Name="DecryptRecoveryPhraseInput"
+                                            Style="{StaticResource RecoveryPhraseInput}"
+                                            Height="80"
+                                            ToolTip="Ingrese las 12 palabras separadas por espacios"
+                                            TextChanged="DecryptRecoveryPhrase_TextChanged"/>
+                                        
+                                        <TextBlock 
+                                            x:Name="RecoveryPhraseValidation"
+                                            Text="Ingrese las 12 palabras separadas por espacios"
+                                            Style="{StaticResource WarningText}"
+                                            Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- Quick Action -->
+                            <Border Style="{StaticResource Card}" Background="#FF0F1F35" BorderBrush="#FFEF4444" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock 
+                                        Text="⚡ Acción Rápida" 
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        Foreground="#FFEF4444"
+                                        Margin="0,0,0,12"/>
+                                    
+                                    <Button
+                                        Content="🔓 Desencriptar Ahora"
+                                        Style="{StaticResource AccentButton}"
+                                        Background="#FFEF4444"
+                                        Click="DecryptFile_Click"
+                                        HorizontalAlignment="Stretch"
+                                        FontWeight="Bold"/>
+                                    
+                                    <TextBlock 
+                                        Text="Usa este botón si ya seleccionaste el archivo y configuraste la autenticación"
+                                        FontSize="11"
+                                        Foreground="#FF93C5FD"
+                                        TextWrapping="Wrap"
+                                        Margin="0,8,0,0"
+                                        HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
 
                 <!-- Info Card -->
