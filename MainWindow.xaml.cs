@@ -1097,7 +1097,7 @@ namespace FileEncrypter
             }
         }
 
-        private void GenerateCertificate_Click(object sender, RoutedEventArgs e)
+        private async void GenerateCertificate_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1112,9 +1112,12 @@ namespace FileEncrypter
                     // y seleccionar automáticamente el nuevo certificado si está instalado
                     try
                     {
+                        // Esperar un momento para que el certificado se instale completamente
+                        await System.Threading.Tasks.Task.Delay(500);
+                        
                         var certificates = _certificateService.GetAvailableCertificates();
                         var latestCert = certificates
-                            .Where(c => c.Certificate.NotBefore >= DateTime.Now.AddMinutes(-5))
+                            .Where(c => c.Certificate.NotBefore >= DateTime.Now.AddMinutes(-5) && c.HasPrivateKey)
                             .OrderByDescending(c => c.Certificate.NotBefore)
                             .FirstOrDefault();
 
@@ -1122,8 +1125,14 @@ namespace FileEncrypter
                         {
                             _selectedEncryptCertificate = latestCert;
                             SelectedCertificateTextBox.Text = latestCert.FriendlyName;
-                            CertificateInfoText.Text = $"Válido hasta: {latestCert.ValidTo:dd/MM/yyyy}";
+                            CertificateInfoText.Text = $"✅ Certificado con clave privada - Válido hasta: {latestCert.ValidTo:dd/MM/yyyy}";
                             CertificateInfoText.Foreground = new SolidColorBrush(Color.FromRgb(16, 185, 129)); // Verde
+                            
+                            CustomMessageBox.ShowSuccess("Certificado generado e instalado correctamente. Ya está seleccionado para encriptación.", "Certificado Listo", this);
+                        }
+                        else
+                        {
+                            CustomMessageBox.ShowInfo("Certificado generado exitosamente. Use el botón 'Seleccionar' para elegir el nuevo certificado.", "Información", this);
                         }
                     }
                     catch (Exception updateEx)

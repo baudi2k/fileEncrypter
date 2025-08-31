@@ -397,18 +397,23 @@ namespace FileEncrypter.Services
                     var notBefore = DateTimeOffset.UtcNow.AddDays(-1);
                     var notAfter = notBefore.AddYears(validityYears);
                     
+                    // Crear certificado con clave privada exportable y persistente
                     var certificate = request.CreateSelfSigned(notBefore, notAfter);
                     
+                    // Asegurar que el certificado tenga clave privada exportable
+                    var certificateWithPrivateKey = new X509Certificate2(certificate.Export(X509ContentType.Pfx), 
+                        "", X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+                    
                     // Establecer nombre amigable
-                    certificate.FriendlyName = $"Certificado de Encriptación - {DateTime.Now:yyyy-MM-dd}";
+                    certificateWithPrivateKey.FriendlyName = $"Certificado de Encriptación - {DateTime.Now:yyyy-MM-dd}";
 
                     // Instalar en el almacén si se solicita
                     if (installInStore)
                     {
-                        InstallCertificate(certificate);
+                        InstallCertificate(certificateWithPrivateKey);
                     }
 
-                    return certificate;
+                    return certificateWithPrivateKey;
                 }
             }
             catch (Exception ex)
@@ -428,7 +433,29 @@ namespace FileEncrypter.Services
                 using (var store = new X509Store(StoreName.My, StoreLocation.CurrentUser))
                 {
                     store.Open(OpenFlags.ReadWrite);
-                    store.Add(certificate);
+                    
+                    // Verificar si el certificado ya existe para evitar duplicados
+                    var existing = store.Certificates.Find(X509FindType.FindByThumbprint, certificate.Thumbprint, false);
+                    if (existing.Count > 0)
+                    {
+                        // Remover el existente primero
+                        store.Remove(existing[0]);
+                    }
+                    
+                    // Asegurar que el certificado tenga las flags correctas para persistir la clave privada
+                    if (certificate.HasPrivateKey)
+                    {
+                        var pfxData = certificate.Export(X509ContentType.Pfx);
+                        var certWithFlags = new X509Certificate2(pfxData, "", 
+                            X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.UserKeySet);
+                        certWithFlags.FriendlyName = certificate.FriendlyName;
+                        
+                        store.Add(certWithFlags);
+                    }
+                    else
+                    {
+                        store.Add(certificate);
+                    }
                 }
             }
             catch (Exception ex)
