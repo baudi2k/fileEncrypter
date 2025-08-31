@@ -982,21 +982,8 @@ namespace FileEncrypter
             
             try
             {
-                var fileData = await File.ReadAllBytesAsync(input, _cts.Token);
-                
-                // Crear estructura de archivo PKI con metadatos
-                var pkiData = new PKIFileData
-                {
-                    OriginalFileName = Path.GetFileName(input),
-                    EncryptedContent = _certificateService.EncryptWithCertificate(fileData, certificateInfo.Certificate),
-                    CertificateThumbprint = certificateInfo.Thumbprint,
-                    EncryptedDate = DateTime.UtcNow
-                };
-                
-                var serializedData = SerializePKIData(pkiData);
-                await File.WriteAllBytesAsync(output, serializedData, _cts.Token);
-                
-                progress.Report(100);
+                // Usar el nuevo método de streaming para archivos grandes
+                await _certificateService.EncryptFileWithCertificateAsync(input, output, certificateInfo.Certificate, progress, _cts.Token);
                 
                 // Agregar al historial
                 var fileInfo = new FileInfo(input);
@@ -1038,6 +1025,20 @@ namespace FileEncrypter
         
         private async Task<string> DecryptFileWithCertificateAsync(string inputPath, CertificateInfo certificateInfo, string outputDir, IProgress<double> progress, CancellationToken cancellationToken)
         {
+            try
+            {
+                // Primero intentar con el nuevo formato de streaming
+                return await _certificateService.DecryptFileWithCertificateAsync(inputPath, outputDir, certificateInfo.Certificate, progress, cancellationToken);
+            }
+            catch (InvalidDataException ex) when (ex.Message.Contains("versión anterior"))
+            {
+                // Si falla, intentar con el formato legacy
+                return await DecryptLegacyPKIFileAsync(inputPath, certificateInfo, outputDir, progress, cancellationToken);
+            }
+        }
+
+        private async Task<string> DecryptLegacyPKIFileAsync(string inputPath, CertificateInfo certificateInfo, string outputDir, IProgress<double> progress, CancellationToken cancellationToken)
+        {
             var fileData = await File.ReadAllBytesAsync(inputPath, cancellationToken);
             var pkiData = DeserializePKIData(fileData);
             
@@ -1066,7 +1067,7 @@ namespace FileEncrypter
             }
             
             await File.WriteAllBytesAsync(outputPath, decryptedData, cancellationToken);
-            progress.Report(100);
+            progress?.Report(100);
             
             return outputPath;
         }

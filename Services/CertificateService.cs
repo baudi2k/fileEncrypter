@@ -145,7 +145,164 @@ namespace FileEncrypter.Services
         }
 
         /// <summary>
-        /// Encripta datos usando un certificado PKI
+        /// Encripta un archivo usando un certificado PKI con streaming para archivos grandes
+        /// </summary>
+        /// <param name="inputPath">Ruta del archivo a encriptar</param>
+        /// <param name="outputPath">Ruta del archivo encriptado</param>
+        /// <param name="certificate">Certificado para encriptación</param>
+        /// <param name="progress">Reporte de progreso</param>
+        /// <param name="cancellationToken">Token de cancelación</param>
+        public async Task EncryptFileWithCertificateAsync(
+            string inputPath, 
+            string outputPath, 
+            X509Certificate2 certificate, 
+            IProgress<double> progress = null, 
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                using (var rsa = certificate.GetRSAPublicKey())
+                {
+                    if (rsa == null)
+                        throw new Exception("No se pudo obtener la clave pública RSA del certificado");
+
+                    // Generar clave y IV AES
+                    using (var aes = Aes.Create())
+                    {
+                        aes.GenerateKey();
+                        aes.GenerateIV();
+
+                        // Encriptar clave AES con RSA
+                        var encryptedKey = rsa.Encrypt(aes.Key, RSAEncryptionPadding.OaepSHA256);
+                        var encryptedIV = rsa.Encrypt(aes.IV, RSAEncryptionPadding.OaepSHA256);
+
+                        // Crear estructura de archivo PKI
+                        var fileInfo = new FileInfo(inputPath);
+                        var pkiFileHeader = new PKIFileHeader
+                        {
+                            OriginalFileName = Path.GetFileName(inputPath),
+                            OriginalFileSize = fileInfo.Length,
+                            CertificateThumbprint = certificate.Thumbprint,
+                            EncryptedDate = DateTime.UtcNow,
+                            EncryptedKey = encryptedKey,
+                            EncryptedIV = encryptedIV
+                        };
+
+                        // Escribir archivo encriptado
+                        using (var outputStream = new FileStream(outputPath, FileMode.Create, FileAccess.Write))
+                        {
+                            // Escribir header
+                            await WriteFileHeaderAsync(outputStream, pkiFileHeader, cancellationToken);
+
+                            // Encriptar y escribir contenido del archivo por bloques
+                            using (var inputStream = new FileStream(inputPath, FileMode.Open, FileAccess.Read))
+                            using (var encryptor = aes.CreateEncryptor())
+                            using (var cryptoStream = new CryptoStream(outputStream, encryptor, CryptoStreamMode.Write))
+                            {
+                                const int bufferSize = 81920; // 80KB buffer
+                                var buffer = new byte[bufferSize];
+                                long totalBytes = fileInfo.Length;
+                                long processedBytes = 0;
+                                
+                                int bytesRead;
+                                while ((bytesRead = await inputStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
+                                {
+                                    await cryptoStream.WriteAsync(buffer, 0, bytesRead, cancellationToken);
+                                    
+                                    processedBytes += bytesRead;
+                                    progress?.Report((double)processedBytes / totalBytes * 100);
+                                }
+                                
+                                cryptoStream.FlushFinalBlock();
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al encriptar archivo con certificado: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Desencripta un archivo usando un certificado PKI
+        /// </summary>
+        /// <param name="inputPath">Ruta del archivo encriptado</param>
+        /// <param name="outputPath">Ruta del archivo desencriptado</param>
+        /// <param name="certificate">Certificado para desencriptación</param>
+        /// <param name="progress">Reporte de progreso</param>
+        /// <param name="cancellationToken">Token de cancelación</param>
+        public async Task<string> DecryptFileWithCertificateAsync(
+            string inputPath, 
+            string outputDirectory, 
+            X509Certificate2 certificate, 
+            IProgress<double> progress = null, 
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (!certificate.HasPrivateKey)
+                    throw new Exception("El certificado no tiene clave privada para desencriptar");
+
+                using (var inputStream = new FileStream(inputPath, FileMode.Open, FileAccess.Read))
+                {
+                    // Leer y validar header
+                    var header = await ReadFileHeaderAsync(inputStream, cancellationToken);
+                    
+                    // Verificar que sea el certificado correcto
+                    if (header.CertificateThumbprint != certificate.Thumbprint)
+                        throw new Exception("El certificado no corresponde con el usado para encriptar este archivo");
+
+                    using (var rsa = certificate.GetRSAPrivateKey())
+                    {
+                        if (rsa == null)
+                            throw new Exception("No se pudo obtener la clave privada RSA del certificado");
+
+                        // Desencriptar clave AES
+                        var aesKey = rsa.Decrypt(header.EncryptedKey, RSAEncryptionPadding.OaepSHA256);
+                        var aesIV = rsa.Decrypt(header.EncryptedIV, RSAEncryptionPadding.OaepSHA256);
+
+                        // Crear archivo de salida
+                        var outputPath = Path.Combine(outputDirectory, header.OriginalFileName);
+                        
+                        using (var outputStream = new FileStream(outputPath, FileMode.Create, FileAccess.Write))
+                        using (var aes = Aes.Create())
+                        {
+                            aes.Key = aesKey;
+                            aes.IV = aesIV;
+                            
+                            using (var decryptor = aes.CreateDecryptor())
+                            using (var cryptoStream = new CryptoStream(inputStream, decryptor, CryptoStreamMode.Read))
+                            {
+                                const int bufferSize = 81920; // 80KB buffer
+                                var buffer = new byte[bufferSize];
+                                long totalBytes = header.OriginalFileSize;
+                                long processedBytes = 0;
+                                
+                                int bytesRead;
+                                while ((bytesRead = await cryptoStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
+                                {
+                                    await outputStream.WriteAsync(buffer, 0, bytesRead, cancellationToken);
+                                    
+                                    processedBytes += bytesRead;
+                                    progress?.Report((double)processedBytes / totalBytes * 100);
+                                }
+                            }
+                        }
+
+                        return outputPath;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al desencriptar archivo con certificado: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Encripta datos usando un certificado PKI (método legacy para datos pequeños)
         /// </summary>
         /// <param name="data">Datos a encriptar</param>
         /// <param name="certificate">Certificado para encriptación</param>
@@ -294,6 +451,16 @@ namespace FileEncrypter.Services
             public byte[] EncryptedIV { get; set; }
             public byte[] EncryptedData { get; set; }
             public string CertificateThumbprint { get; set; }
+        }
+
+        private class PKIFileHeader
+        {
+            public string OriginalFileName { get; set; }
+            public long OriginalFileSize { get; set; }
+            public string CertificateThumbprint { get; set; }
+            public DateTime EncryptedDate { get; set; }
+            public byte[] EncryptedKey { get; set; }
+            public byte[] EncryptedIV { get; set; }
         }
 
         private byte[] SerializeEncryptedData(CertificateEncryptedData data)
@@ -509,6 +676,67 @@ namespace FileEncrypter.Services
             catch (Exception ex)
             {
                 throw new Exception($"Error al importar certificado: {ex.Message}", ex);
+            }
+        }
+
+        private async Task WriteFileHeaderAsync(Stream outputStream, PKIFileHeader header, CancellationToken cancellationToken)
+        {
+            // Escribir signature
+            var signature = Encoding.UTF8.GetBytes("FILEENC_PKI_V2");
+            await outputStream.WriteAsync(signature, 0, signature.Length, cancellationToken);
+
+            // Serializar header usando BinaryWriter para mejor control
+            using (var headerStream = new MemoryStream())
+            using (var writer = new BinaryWriter(headerStream, Encoding.UTF8))
+            {
+                writer.Write(header.OriginalFileName ?? "");
+                writer.Write(header.OriginalFileSize);
+                writer.Write(header.CertificateThumbprint ?? "");
+                writer.Write(header.EncryptedDate.ToBinary());
+                writer.Write(header.EncryptedKey.Length);
+                writer.Write(header.EncryptedKey);
+                writer.Write(header.EncryptedIV.Length);
+                writer.Write(header.EncryptedIV);
+
+                var headerData = headerStream.ToArray();
+                var headerLength = BitConverter.GetBytes(headerData.Length);
+                await outputStream.WriteAsync(headerLength, 0, 4, cancellationToken);
+                await outputStream.WriteAsync(headerData, 0, headerData.Length, cancellationToken);
+            }
+        }
+
+        private async Task<PKIFileHeader> ReadFileHeaderAsync(Stream inputStream, CancellationToken cancellationToken)
+        {
+            // Leer y verificar signature
+            var signatureBuffer = new byte[14];
+            await inputStream.ReadAsync(signatureBuffer, 0, 14, cancellationToken);
+            var signature = Encoding.UTF8.GetString(signatureBuffer);
+            
+            if (signature != "FILEENC_PKI_V2")
+                throw new InvalidDataException("El archivo no es un archivo PKI válido o es de una versión anterior");
+
+            // Leer longitud del header
+            var headerLengthBuffer = new byte[4];
+            await inputStream.ReadAsync(headerLengthBuffer, 0, 4, cancellationToken);
+            var headerLength = BitConverter.ToInt32(headerLengthBuffer, 0);
+
+            // Leer header
+            var headerData = new byte[headerLength];
+            await inputStream.ReadAsync(headerData, 0, headerLength, cancellationToken);
+
+            // Deserializar header
+            using (var headerStream = new MemoryStream(headerData))
+            using (var reader = new BinaryReader(headerStream, Encoding.UTF8))
+            {
+                return new PKIFileHeader
+                {
+                    OriginalFileName = reader.ReadString(),
+                    OriginalFileSize = reader.ReadInt64(),
+                    CertificateThumbprint = reader.ReadString(),
+                    EncryptedDate = DateTime.FromBinary(reader.ReadInt64()),
+                    EncryptedKey = reader.ReadBytes(reader.ReadInt32()),
+                    EncryptedIV = reader.ReadBytes(reader.ReadInt32())
+                };
             }
         }
 
