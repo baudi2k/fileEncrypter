@@ -39,17 +39,43 @@ namespace FileEncrypter
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             UpdateEncryptPasswordStrength();
+            // Inicializar estados de los paneles
+            EncryptionMethod_Changed(null, null);
         }
 
         private async void EncryptFile_Click(object sender, RoutedEventArgs e)
         {
-            var pwd = _isEncryptPasswordVisible ? (_encryptPasswordTextBox?.Text ?? "") : EncryptPasswordInput.Password;
-            if (string.IsNullOrWhiteSpace(pwd))
+            // Determinar método de encriptación
+            bool usePassword = UsePasswordEncryptRadio?.IsChecked == true;
+            bool useCertificate = UseCertificateEncryptRadio?.IsChecked == true;
+            
+            if (usePassword)
             {
-                CustomMessageBox.ShowWarning("Por favor, ingrese una contraseña antes de continuar.", "Contraseña Requerida", this);
-                return;
+                var pwd = _isEncryptPasswordVisible ? (_encryptPasswordTextBox?.Text ?? "") : EncryptPasswordInput.Password;
+                if (string.IsNullOrWhiteSpace(pwd))
+                {
+                    CustomMessageBox.ShowWarning("Por favor, ingrese una contraseña antes de continuar.", "Contraseña Requerida", this);
+                    return;
+                }
+                await EncryptFileWithPassword(pwd);
             }
-
+            else if (useCertificate)
+            {
+                if (_selectedEncryptCertificate == null)
+                {
+                    CustomMessageBox.ShowWarning("Por favor, seleccione un certificado PKI antes de continuar.", "Certificado Requerido", this);
+                    return;
+                }
+                await EncryptFileWithCertificate(_selectedEncryptCertificate);
+            }
+            else
+            {
+                CustomMessageBox.ShowWarning("Por favor, seleccione un método de encriptación.", "Método Requerido", this);
+            }
+        }
+        
+        private async Task EncryptFileWithPassword(string password)
+        {
             var dlg = new OpenFileDialog();
             if (dlg.ShowDialog() != true) return;
 
@@ -73,7 +99,7 @@ namespace FileEncrypter
             
             try
             {
-                var result = await EncryptionService.EncryptFileWithRecoveryAsync(input, output, pwd, progress, _cts.Token);
+                var result = await EncryptionService.EncryptFileWithRecoveryAsync(input, output, password, progress, _cts.Token);
                 
                 // No limpiar notificación de progreso (ya que no la mostramos)
                 
