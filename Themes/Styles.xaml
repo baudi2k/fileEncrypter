@@ -4,18 +4,54 @@
 
     <!-- Card Style -->
     <Style x:Key="Card" TargetType="Border">
-        <Setter Property="Background" Value="#FF2A2A2A"/>
-        <Setter Property="CornerRadius" Value="12"/>
-        <Setter Property="Padding" Value="20"/>
-        <Setter Property="Margin" Value="0,0,0,16"/>
+        <Setter Property="Background" Value="{StaticResource SurfaceVariantBrush}"/>
+        <Setter Property="CornerRadius" Value="16"/>
+        <Setter Property="Padding" Value="24"/>
+        <Setter Property="Margin" Value="0,0,0,20"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Effect">
             <Setter.Value>
                 <DropShadowEffect Color="#FF000000" 
-                                BlurRadius="20" 
-                                ShadowDepth="4" 
-                                Opacity="0.3"/>
+                                BlurRadius="24" 
+                                ShadowDepth="6" 
+                                Opacity="0.15"/>
             </Setter.Value>
         </Setter>
+        <Setter Property="RenderTransform">
+            <Setter.Value>
+                <ScaleTransform ScaleX="1" ScaleY="1"/>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Trigger.EnterActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX" 
+                                           To="1.02" Duration="0:0:0.2"/>
+                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" 
+                                           To="1.02" Duration="0:0:0.2"/>
+                            <DoubleAnimation Storyboard.TargetProperty="(Effect).Opacity" 
+                                           To="0.25" Duration="0:0:0.2"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.EnterActions>
+                <Trigger.ExitActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX" 
+                                           To="1" Duration="0:0:0.2"/>
+                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" 
+                                           To="1" Duration="0:0:0.2"/>
+                            <DoubleAnimation Storyboard.TargetProperty="(Effect).Opacity" 
+                                           To="0.15" Duration="0:0:0.2"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.ExitActions>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- Header Style -->
@@ -42,19 +78,20 @@
 
     <!-- Modern PasswordBox Style -->
     <Style x:Key="ModernPasswordBox" TargetType="PasswordBox">
-        <Setter Property="Background" Value="#FF3A3A3A"/>
+        <Setter Property="Background" Value="{StaticResource SurfaceContainerBrush}"/>
         <Setter Property="Foreground" Value="{StaticResource OnSurfaceBrush}"/>
-        <Setter Property="BorderBrush" Value="#FF4A4A4A"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="Padding" Value="16,12"/>
         <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Height" Value="48"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="PasswordBox">
                     <Border Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="8">
+                            CornerRadius="12">
                         <ScrollViewer x:Name="PART_ContentHost" 
                                     Margin="{TemplateBinding Padding}"
                                     VerticalAlignment="Center"/>
@@ -65,7 +102,7 @@
                             <Setter Property="BorderThickness" Value="2"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="BorderBrush" Value="#FF6A6A6A"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource BorderHoverBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -75,19 +112,20 @@
 
     <!-- Modern TextBox Style (compatible con PasswordBox) -->
     <Style x:Key="ModernTextBox" TargetType="TextBox">
-        <Setter Property="Background" Value="#FF3A3A3A"/>
+        <Setter Property="Background" Value="{StaticResource SurfaceContainerBrush}"/>
         <Setter Property="Foreground" Value="{StaticResource OnSurfaceBrush}"/>
-        <Setter Property="BorderBrush" Value="#FF4A4A4A"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="Padding" Value="16,12"/>
         <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Height" Value="48"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
                     <Border Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="8">
+                            CornerRadius="12">
                         <ScrollViewer x:Name="PART_ContentHost" 
                                     Margin="{TemplateBinding Padding}"
                                     VerticalAlignment="Center"/>
@@ -98,7 +136,7 @@
                             <Setter Property="BorderThickness" Value="2"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="BorderBrush" Value="#FF6A6A6A"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource BorderHoverBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -135,24 +173,31 @@
     <Style x:Key="AccentButton" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
         <Setter Property="Foreground" Value="White"/>
-        <Setter Property="Padding" Value="16,12"/>
+        <Setter Property="Padding" Value="20,14"/>
         <Setter Property="Margin" Value="0,0,12,0"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Height" Value="48"/>
+        <Setter Property="RenderTransform">
+            <Setter.Value>
+                <ScaleTransform ScaleX="1" ScaleY="1"/>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border Background="{TemplateBinding Background}"
-                            CornerRadius="8"
+                            CornerRadius="12"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}">
                         <Border.Effect>
                             <DropShadowEffect Color="#FF000000" 
-                                            BlurRadius="8" 
-                                            ShadowDepth="2" 
-                                            Opacity="0.2"/>
+                                            BlurRadius="12" 
+                                            ShadowDepth="3" 
+                                            Opacity="0.25"/>
                         </Border.Effect>
                         <ContentPresenter HorizontalAlignment="Center" 
                                         VerticalAlignment="Center"
@@ -160,14 +205,54 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="#FF2563EB"/>
+                            <Setter Property="Background" Value="{StaticResource AccentHoverBrush}"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX" 
+                                                       To="1.05" Duration="0:0:0.15"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" 
+                                                       To="1.05" Duration="0:0:0.15"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX" 
+                                                       To="1" Duration="0:0:0.15"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" 
+                                                       To="1" Duration="0:0:0.15"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter Property="Background" Value="#FF1D4ED8"/>
+                            <Setter Property="Background" Value="{StaticResource AccentPressedBrush}"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX" 
+                                                       To="0.95" Duration="0:0:0.1"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" 
+                                                       To="0.95" Duration="0:0:0.1"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX" 
+                                                       To="1" Duration="0:0:0.1"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" 
+                                                       To="1" Duration="0:0:0.1"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Background" Value="#FF6B7280"/>
-                            <Setter Property="Foreground" Value="#FFD1D5DB"/>
+                            <Setter Property="Background" Value="{StaticResource OnSurfaceSecondaryBrush}"/>
+                            <Setter Property="Foreground" Value="{StaticResource OnSurfaceVariantBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -324,10 +409,10 @@
 
     <!-- Sidebar Styles -->
     <Style x:Key="SidebarPanel" TargetType="Border">
-        <Setter Property="Background" Value="#FF1A1A1A"/>
-        <Setter Property="BorderBrush" Value="#FF333333"/>
+        <Setter Property="Background" Value="{StaticResource SurfaceGradientBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="0,0,1,0"/>
-        <Setter Property="Width" Value="220"/>
+        <Setter Property="Width" Value="240"/>
     </Style>
 
     <!-- Sidebar Button Style -->
@@ -335,28 +420,30 @@
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="{StaticResource OnSurfaceBrush}"/>
         <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Padding" Value="16,12"/>
+        <Setter Property="Padding" Value="20,16"/>
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
         <Setter Property="HorizontalContentAlignment" Value="Left"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Margin" Value="8,4"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}">
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="12">
                         <ContentPresenter Margin="{TemplateBinding Padding}"
                                         HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                         VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="#FF2A2A2A"/>
+                            <Setter Property="Background" Value="{StaticResource SurfaceVariantBrush}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter Property="Background" Value="#FF3A3A3A"/>
+                            <Setter Property="Background" Value="{StaticResource SurfaceContainerBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -373,7 +460,7 @@
     <!-- Content Panel Style -->
     <Style x:Key="ContentPanel" TargetType="ScrollViewer">
         <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-        <Setter Property="Padding" Value="24"/>
+        <Setter Property="Padding" Value="32"/>
         <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
         <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
     </Style>

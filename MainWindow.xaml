@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="FileEncrypter"
-        Width="900" Height="700"
+        Width="1000" Height="750" MinWidth="800" MinHeight="600"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource SurfaceBrush}"
         AllowDrop="True"
@@ -21,16 +21,27 @@
         <Border Grid.Column="0" Style="{StaticResource SidebarPanel}">
             <StackPanel>
                 <!-- Logo/Header -->
-                <Border Background="{StaticResource AccentBrush}" Padding="16,20">
-                    <TextBlock Text="🔐 FileEncrypter" 
-                               FontSize="18" 
-                               FontWeight="Bold" 
-                               Foreground="White" 
-                               HorizontalAlignment="Center"/>
+                <Border Background="{StaticResource AccentGradientBrush}" Padding="20,24">
+                    <StackPanel HorizontalAlignment="Center">
+                        <TextBlock Text="🔐" 
+                                   FontSize="32" 
+                                   HorizontalAlignment="Center" 
+                                   Margin="0,0,0,8"/>
+                        <TextBlock Text="FileEncrypter" 
+                                   FontSize="18" 
+                                   FontWeight="Bold" 
+                                   Foreground="White" 
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="Cifrado Seguro" 
+                                   FontSize="12" 
+                                   Foreground="#FFE0E7FF" 
+                                   HorizontalAlignment="Center" 
+                                   Margin="0,4,0,0"/>
+                    </StackPanel>
                 </Border>
 
                 <!-- Navigation Buttons -->
-                <StackPanel Margin="0,16,0,0">
+                <StackPanel Margin="0,20,0,0">
                     <Button x:Name="EncryptNavButton"
                             Content="🔒 Encriptar"
                             Style="{StaticResource SidebarButtonActive}"
@@ -39,17 +50,20 @@
                             Content="🔓 Desencriptar"
                             Style="{StaticResource SidebarButton}"
                             Click="DecryptNav_Click"/>
-                    <Button x:Name="HistoryNavButton"
-                            Content="📋 Historial"
+                    <Button x:Name="MassEncryptNavButton"
+                            Content="📁 Encriptación Masiva"
                             Style="{StaticResource SidebarButton}"
-                            Click="HistoryNav_Click"
-                            Margin="0,8,0,0"/>
+                            Click="MassEncryptNav_Click"/>
+                    <Button x:Name="HistoryNavButton"
+                            Content="📊 Historial"
+                            Style="{StaticResource SidebarButton}"
+                            Click="HistoryNav_Click"/>
                 </StackPanel>
 
                 <!-- Progress Section (Global) -->
                 <StackPanel x:Name="ProgressSection" Visibility="Collapsed" Margin="16,24,16,0">
                     <TextBlock 
-                        Text="📊 Progreso" 
+                        Text="⚡ Progreso" 
                         FontSize="12"
                         FontWeight="SemiBold"
                         Foreground="{StaticResource OnSurfaceBrush}"
@@ -59,7 +73,7 @@
                         Style="{StaticResource ModernProgressBar}"/>
                     <Button 
                         x:Name="CancelButton" 
-                        Content="❌ Cancelar" 
+                        Content="⏹️ Cancelar" 
                         Style="{StaticResource SmallButton}"
                         Click="CancelButton_Click" 
                         IsEnabled="False"
@@ -71,18 +85,26 @@
 
         <!-- Main Content Area -->
         <ScrollViewer Grid.Column="1" Style="{StaticResource ContentPanel}">
-            <StackPanel MaxWidth="600">
+            <StackPanel MaxWidth="800" MinWidth="400">
 
                 <!-- Encrypt Section -->
                 <StackPanel x:Name="EncryptSection" Visibility="Visible">
-                    <TextBlock Text="🔒 Encriptar Archivos" Style="{StaticResource SectionHeader}" Margin="0,0,0,16"/>
+                    <StackPanel HorizontalAlignment="Center" Margin="0,0,0,24">
+                        <TextBlock Text="🔒" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                        <TextBlock Text="Encriptar Archivos" Style="{StaticResource SectionHeader}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Protege tus archivos con cifrado de grado militar" 
+                                   FontSize="14" 
+                                   Foreground="{StaticResource OnSurfaceVariantBrush}" 
+                                   HorizontalAlignment="Center" 
+                                   Margin="0,8,0,0"/>
+                    </StackPanel>
                     
                     <!-- Main Layout Grid -->
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="10"/>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*" MinWidth="300"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*" MinWidth="300"/>
                         </Grid.ColumnDefinitions>
                         
                         <!-- Left Column -->
@@ -466,14 +488,22 @@
 
                 <!-- Decrypt Section -->
                 <StackPanel x:Name="DecryptSection" Visibility="Collapsed">
-                    <TextBlock Text="🔓 Desencriptar Archivos" Style="{StaticResource SectionHeader}" Margin="0,0,0,16"/>
+                    <StackPanel HorizontalAlignment="Center" Margin="0,0,0,24">
+                        <TextBlock Text="🔓" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                        <TextBlock Text="Desencriptar Archivos" Style="{StaticResource SectionHeader}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Recupera tus archivos cifrados de forma segura" 
+                                   FontSize="14" 
+                                   Foreground="{StaticResource OnSurfaceVariantBrush}" 
+                                   HorizontalAlignment="Center" 
+                                   Margin="0,8,0,0"/>
+                    </StackPanel>
                     
                     <!-- Main Layout Grid -->
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="10"/>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*" MinWidth="300"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*" MinWidth="300"/>
                         </Grid.ColumnDefinitions>
                         
                         <!-- Left Column -->
@@ -696,6 +726,108 @@
                             </Border>
                         </StackPanel>
                     </Grid>
+                </StackPanel>
+
+                <!-- Mass Encryption Section -->
+                <StackPanel x:Name="MassEncryptSection" Visibility="Collapsed">
+                    <StackPanel HorizontalAlignment="Center" Margin="0,0,0,24">
+                        <TextBlock Text="📁" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                        <TextBlock Text="Encriptación Masiva" Style="{StaticResource SectionHeader}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Encripta múltiples archivos de una carpeta de forma masiva" 
+                                   FontSize="14" 
+                                   Foreground="{StaticResource OnSurfaceVariantBrush}" 
+                                   HorizontalAlignment="Center" 
+                                   Margin="0,8,0,0"/>
+                    </StackPanel>
+                    
+                    <!-- Quick Access Card -->
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,20">
+                        <StackPanel>
+                            <TextBlock Text="🚀 Acceso Rápido" 
+                                       Style="{StaticResource SectionTitle}" 
+                                       Margin="0,0,0,16"/>
+                            
+                            <TextBlock Text="La encriptación masiva te permite procesar múltiples archivos de una carpeta de forma eficiente con configuraciones avanzadas."
+                                       FontSize="14"
+                                       Foreground="{StaticResource OnSurfaceVariantBrush}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,16"/>
+                            
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="✨ Características:"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               Margin="0,0,0,8"/>
+                                    <StackPanel>
+                                        <TextBlock Text="• Encriptación de carpetas completas"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource OnSurfaceVariantBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBlock Text="• Filtros por tipo de archivo"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource OnSurfaceVariantBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBlock Text="• Preservación de estructura"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource OnSurfaceVariantBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBlock Text="• Progreso en tiempo real"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource OnSurfaceVariantBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBlock Text="• Manejo de errores avanzado"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource OnSurfaceVariantBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="⚙️ Opciones Avanzadas:"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               Margin="0,0,0,8"/>
+                                    <StackPanel>
+                                        <TextBlock Text="• Límites de tamaño de archivo"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource OnSurfaceVariantBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBlock Text="• Exclusión de extensiones"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource OnSurfaceVariantBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBlock Text="• Inclusión de subcarpetas"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource OnSurfaceVariantBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBlock Text="• Eliminación de originales"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource OnSurfaceVariantBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBlock Text="• Estadísticas detalladas"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource OnSurfaceVariantBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                            
+                            <Button x:Name="OpenMassEncryptionButton"
+                                    Content="📁 Abrir Encriptación Masiva"
+                                    Style="{StaticResource AccentButton}"
+                                    Click="OpenMassEncryption_Click"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,20,0,0"
+                                    FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
 
                 <!-- Info Card -->

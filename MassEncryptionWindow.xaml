@@ -1,0 +1,414 @@
+<Window x:Class="FileEncrypter.MassEncryptionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Encriptación Masiva de Carpetas" 
+        Width="900" Height="700"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource SurfaceBrush}"
+        ResizeMode="CanResize">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{StaticResource AccentGradientBrush}" Padding="24,20">
+            <StackPanel HorizontalAlignment="Center">
+                <TextBlock Text="📁" FontSize="32" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                <TextBlock Text="Encriptación Masiva" 
+                           FontSize="24" 
+                           FontWeight="Bold" 
+                           Foreground="White" 
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="Encripta múltiples archivos de una carpeta de forma masiva" 
+                           FontSize="14" 
+                           Foreground="#FFE0E7FF" 
+                           HorizontalAlignment="Center" 
+                           Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content -->
+        <ScrollViewer Grid.Row="1" Style="{StaticResource ContentPanel}">
+            <StackPanel MaxWidth="800">
+                
+                <!-- Folder Selection -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="📂 Selección de Carpetas" 
+                                   Style="{StaticResource SectionTitle}" 
+                                   Margin="0,0,0,16"/>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Source Folder -->
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Carpeta de Origen:" 
+                                           FontSize="14" 
+                                           FontWeight="SemiBold" 
+                                           Foreground="{StaticResource OnSurfaceBrush}" 
+                                           Margin="0,0,0,8"/>
+                                
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBox x:Name="SourceFolderTextBox" 
+                                             Grid.Column="0"
+                                             Style="{StaticResource ModernTextBox}"
+                                             IsReadOnly="True"
+                                             Text="Selecciona una carpeta..."
+                                             Margin="0,0,8,0"/>
+                                    
+                                    <Button Grid.Column="1"
+                                            Content="📁 Seleccionar"
+                                            Style="{StaticResource AccentButton}"
+                                            Click="SelectSourceFolder_Click"
+                                            Padding="16,12"/>
+                                </Grid>
+                            </StackPanel>
+                            
+                            <!-- Output Folder -->
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Carpeta de Destino:" 
+                                           FontSize="14" 
+                                           FontWeight="SemiBold" 
+                                           Foreground="{StaticResource OnSurfaceBrush}" 
+                                           Margin="0,0,0,8"/>
+                                
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBox x:Name="OutputFolderTextBox" 
+                                             Grid.Column="0"
+                                             Style="{StaticResource ModernTextBox}"
+                                             IsReadOnly="True"
+                                             Text="Selecciona carpeta de destino..."
+                                             Margin="0,0,8,0"/>
+                                    
+                                    <Button Grid.Column="1"
+                                            Content="📁 Seleccionar"
+                                            Style="{StaticResource AccentButton}"
+                                            Click="SelectOutputFolder_Click"
+                                            Padding="16,12"/>
+                                </Grid>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <!-- Folder Options -->
+                        <StackPanel Margin="0,16,0,0">
+                            <CheckBox x:Name="IncludeSubfoldersCheckBox"
+                                      Content="Incluir subcarpetas"
+                                      Style="{StaticResource ModernCheckBox}"
+                                      IsChecked="True"
+                                      Margin="0,0,0,8"/>
+                            
+                            <CheckBox x:Name="PreserveStructureCheckBox"
+                                      Content="Preservar estructura de carpetas"
+                                      Style="{StaticResource ModernCheckBox}"
+                                      IsChecked="True"
+                                      Margin="0,0,0,8"/>
+                            
+                            <CheckBox x:Name="DeleteOriginalCheckBox"
+                                      Content="Eliminar archivos originales después de encriptar"
+                                      Style="{StaticResource ModernCheckBox}"
+                                      Margin="0,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- File Filters -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="🔍 Filtros de Archivos" 
+                                   Style="{StaticResource SectionTitle}" 
+                                   Margin="0,0,0,16"/>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Allowed Extensions -->
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Extensiones Permitidas:" 
+                                           FontSize="14" 
+                                           FontWeight="SemiBold" 
+                                           Foreground="{StaticResource OnSurfaceBrush}" 
+                                           Margin="0,0,0,8"/>
+                                
+                                <TextBox x:Name="AllowedExtensionsTextBox"
+                                         Style="{StaticResource ModernTextBox}"
+                                         Height="80"
+                                         TextWrapping="Wrap"
+                                         AcceptsReturn="True"
+                                         Text="Dejar vacío para permitir todas"
+                                         ToolTip="Una extensión por línea (ej: .txt, .pdf, .docx)"/>
+                            </StackPanel>
+                            
+                            <!-- Excluded Extensions -->
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Extensiones Excluidas:" 
+                                           FontSize="14" 
+                                           FontWeight="SemiBold" 
+                                           Foreground="{StaticResource OnSurfaceBrush}" 
+                                           Margin="0,0,0,8"/>
+                                
+                                <TextBox x:Name="ExcludedExtensionsTextBox"
+                                         Style="{StaticResource ModernTextBox}"
+                                         Height="80"
+                                         TextWrapping="Wrap"
+                                         AcceptsReturn="True"
+                                         Text="Una extensión por línea (ej: .tmp, .log)"
+                                         ToolTip="Archivos con estas extensiones serán excluidos"/>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <!-- Max File Size -->
+                        <StackPanel Margin="0,16,0,0">
+                            <TextBlock Text="Tamaño Máximo de Archivo:" 
+                                       FontSize="14" 
+                                       FontWeight="SemiBold" 
+                                       Foreground="{StaticResource OnSurfaceBrush}" 
+                                       Margin="0,0,0,8"/>
+                            
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <Slider x:Name="MaxFileSizeSlider"
+                                        Grid.Column="0"
+                                        Style="{StaticResource ModernSlider}"
+                                        Minimum="0"
+                                        Maximum="10"
+                                        Value="0"
+                                        IsSnapToTickEnabled="True"
+                                        TickFrequency="1"
+                                        ValueChanged="MaxFileSizeSlider_ValueChanged"
+                                        Margin="0,0,16,0"/>
+                                
+                                <TextBlock x:Name="MaxFileSizeLabel"
+                                           Grid.Column="1"
+                                           Text="Sin límite"
+                                           Foreground="{StaticResource AccentBrush}"
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Encryption Method -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="🔐 Método de Encriptación" 
+                                   Style="{StaticResource SectionTitle}" 
+                                   Margin="0,0,0,16"/>
+                        
+                        <StackPanel Margin="0,0,0,16">
+                            <RadioButton x:Name="UsePasswordRadio"
+                                         Content="🔑 Usar Contraseña"
+                                         IsChecked="True"
+                                         Checked="EncryptionMethod_Changed"
+                                         Foreground="{StaticResource OnSurfaceBrush}"
+                                         FontSize="14"
+                                         Margin="0,0,0,8"/>
+                            <RadioButton x:Name="UseCertificateRadio"
+                                         Content="📜 Usar Certificado PKI"
+                                         Checked="EncryptionMethod_Changed"
+                                         Foreground="{StaticResource OnSurfaceBrush}"
+                                         FontSize="14"/>
+                        </StackPanel>
+
+                        <!-- Password Panel -->
+                        <StackPanel x:Name="PasswordPanel">
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <PasswordBox x:Name="PasswordInput" 
+                                             Grid.Column="0"
+                                             Style="{StaticResource ModernPasswordBox}"
+                                             ToolTip="Ingrese una contraseña segura"/>
+                                
+                                <Button Grid.Column="1"
+                                        x:Name="ShowPasswordButton"
+                                        Content="👁️"
+                                        Style="{StaticResource SmallButton}"
+                                        Click="ShowPassword_Click"
+                                        VerticalAlignment="Center"
+                                        Margin="8,0,0,0"/>
+                            </Grid>
+                            
+                            <!-- Password Strength -->
+                            <StackPanel x:Name="PasswordStrengthPanel" Margin="0,0,0,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <ProgressBar x:Name="PasswordStrengthBar"
+                                                 Grid.Column="0"
+                                                 Height="4"
+                                                 Background="#FF374151"
+                                                 BorderThickness="0"
+                                                 Value="0"
+                                                 Maximum="100"
+                                                 Style="{StaticResource ModernProgressBar}"/>
+                                    
+                                    <TextBlock x:Name="PasswordStrengthText"
+                                               Grid.Column="1"
+                                               Text="Débil"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Margin="8,0,0,0"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Certificate Panel -->
+                        <StackPanel x:Name="CertificatePanel" Visibility="Collapsed">
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBox x:Name="SelectedCertificateTextBox"
+                                         Grid.Column="0"
+                                         Style="{StaticResource ModernTextBox}"
+                                         IsReadOnly="True"
+                                         Text="Ningún certificado seleccionado"
+                                         Background="#FF374151"/>
+                                
+                                <Button Grid.Column="1"
+                                        Content="📜 Seleccionar"
+                                        Style="{StaticResource SmallButton}"
+                                        Click="SelectCertificate_Click"
+                                        Margin="8,0,0,0"/>
+                                
+                                <Button Grid.Column="2"
+                                        Content="🔐 Generar"
+                                        Style="{StaticResource SmallButton}"
+                                        Click="GenerateCertificate_Click"
+                                        ToolTip="Generar nuevo certificado PKI"
+                                        Margin="4,0,0,0"/>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Statistics -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="📊 Estadísticas de la Carpeta" 
+                                   Style="{StaticResource SectionTitle}" 
+                                   Margin="0,0,0,16"/>
+                        
+                        <Grid x:Name="StatsGrid" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                <TextBlock x:Name="TotalFilesText"
+                                           Text="0"
+                                           FontSize="24"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource AccentBrush}"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="Archivos Totales"
+                                           FontSize="12"
+                                           Foreground="{StaticResource OnSurfaceVariantBrush}"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                            
+                            <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                <TextBlock x:Name="TotalSizeText"
+                                           Text="0 B"
+                                           FontSize="24"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource SuccessBrush}"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="Tamaño Total"
+                                           FontSize="12"
+                                           Foreground="{StaticResource OnSurfaceVariantBrush}"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                            
+                            <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                                <TextBlock x:Name="EstimatedTimeText"
+                                           Text="0 min"
+                                           FontSize="24"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource WarningBrush}"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="Tiempo Estimado"
+                                           FontSize="12"
+                                           Foreground="{StaticResource OnSurfaceVariantBrush}"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <Button x:Name="AnalyzeButton"
+                                Content="🔍 Analizar Carpeta"
+                                Style="{StaticResource AccentButton}"
+                                Click="AnalyzeFolder_Click"
+                                HorizontalAlignment="Center"
+                                Margin="0,16,0,0"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Action Buttons -->
+        <Border Grid.Row="2" Background="{StaticResource SurfaceVariantBrush}" Padding="24,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <Button Grid.Column="1"
+                        x:Name="CancelButton"
+                        Content="❌ Cancelar"
+                        Style="{StaticResource FlatButton}"
+                        Click="Cancel_Click"
+                        Margin="0,0,12,0"/>
+                
+                <Button Grid.Column="2"
+                        x:Name="StartButton"
+                        Content="🚀 Iniciar Encriptación Masiva"
+                        Style="{StaticResource AccentButton}"
+                        Click="StartMassEncryption_Click"
+                        FontWeight="Bold"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

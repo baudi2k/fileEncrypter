@@ -519,15 +519,8 @@ namespace FileEncrypter
                 EncryptSection == null || DecryptSection == null) return;
 
             _currentSection = "Encrypt";
-            
-            // Update button styles
-            EncryptNavButton.Style = (Style)FindResource("SidebarButtonActive");
-            DecryptNavButton.Style = (Style)FindResource("SidebarButton");
-            HistoryNavButton.Style = (Style)FindResource("SidebarButton");
-            
-            // Show/Hide sections
-            EncryptSection.Visibility = Visibility.Visible;
-            DecryptSection.Visibility = Visibility.Collapsed;
+            ShowSection("Encrypt");
+            UpdateNavigationButtons("Encrypt");
         }
 
         private void DecryptNav_Click(object sender, RoutedEventArgs e)
@@ -536,15 +529,8 @@ namespace FileEncrypter
                 EncryptSection == null || DecryptSection == null) return;
 
             _currentSection = "Decrypt";
-            
-            // Update button styles
-            EncryptNavButton.Style = (Style)FindResource("SidebarButton");
-            DecryptNavButton.Style = (Style)FindResource("SidebarButtonActive");
-            HistoryNavButton.Style = (Style)FindResource("SidebarButton");
-            
-            // Show/Hide sections
-            EncryptSection.Visibility = Visibility.Collapsed;
-            DecryptSection.Visibility = Visibility.Visible;
+            ShowSection("Decrypt");
+            UpdateNavigationButtons("Decrypt");
         }
 
         private void HistoryNav_Click(object sender, RoutedEventArgs e)
@@ -560,6 +546,73 @@ namespace FileEncrypter
             catch (Exception ex)
             {
                 CustomMessageBox.ShowError($"Error abriendo historial: {ex.Message}", "Error", this);
+            }
+        }
+
+        private void MassEncryptNav_Click(object sender, RoutedEventArgs e)
+        {
+            ShowSection("MassEncrypt");
+            UpdateNavigationButtons("MassEncrypt");
+        }
+
+        private void ShowSection(string section)
+        {
+            // Hide all sections
+            EncryptSection.Visibility = Visibility.Collapsed;
+            DecryptSection.Visibility = Visibility.Collapsed;
+            MassEncryptSection.Visibility = Visibility.Collapsed;
+
+            // Show selected section
+            switch (section)
+            {
+                case "Encrypt":
+                    EncryptSection.Visibility = Visibility.Visible;
+                    break;
+                case "Decrypt":
+                    DecryptSection.Visibility = Visibility.Visible;
+                    break;
+                case "MassEncrypt":
+                    MassEncryptSection.Visibility = Visibility.Visible;
+                    break;
+            }
+        }
+
+        private void UpdateNavigationButtons(string activeSection)
+        {
+            // Reset all buttons to inactive style
+            EncryptNavButton.Style = (Style)FindResource("SidebarButton");
+            DecryptNavButton.Style = (Style)FindResource("SidebarButton");
+            MassEncryptNavButton.Style = (Style)FindResource("SidebarButton");
+            HistoryNavButton.Style = (Style)FindResource("SidebarButton");
+
+            // Set active button style
+            switch (activeSection)
+            {
+                case "Encrypt":
+                    EncryptNavButton.Style = (Style)FindResource("SidebarButtonActive");
+                    break;
+                case "Decrypt":
+                    DecryptNavButton.Style = (Style)FindResource("SidebarButtonActive");
+                    break;
+                case "MassEncrypt":
+                    MassEncryptNavButton.Style = (Style)FindResource("SidebarButtonActive");
+                    break;
+            }
+        }
+
+        private void OpenMassEncryption_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var massEncryptionWindow = new MassEncryptionWindow
+                {
+                    Owner = this
+                };
+                massEncryptionWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                CustomMessageBox.ShowError($"Error abriendo encriptación masiva: {ex.Message}", "Error", this);
             }
         }
 

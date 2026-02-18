@@ -10,6 +10,7 @@ namespace FileEncrypter
     public partial class CertificateGenerationWindow : Window
     {
         private readonly CertificateService _certificateService;
+        public CertificateInfo? GeneratedCertificate { get; private set; }
 
         public CertificateGenerationWindow()
         {
@@ -144,6 +145,16 @@ namespace FileEncrypter
                 message += "\n⚠️ Guarde la información del certificado en un lugar seguro.";
 
                 CustomMessageBox.ShowSuccess(message, "Certificado Generado", this);
+                
+                // Asignar el certificado generado
+                GeneratedCertificate = new CertificateInfo
+                {
+                    Subject = certificate.Subject,
+                    Issuer = certificate.Issuer,
+                    Thumbprint = certificate.Thumbprint,
+                    FriendlyName = certificate.FriendlyName,
+                    Certificate = certificate
+                };
                 
                 this.DialogResult = true;
                 this.Close();

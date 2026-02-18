@@ -85,6 +85,11 @@ namespace FileEncrypter.Helpers
             return new string(array);
         }
 
+        public static PasswordStrength CalculatePasswordStrength(string password)
+        {
+            return EvaluatePasswordStrength(password);
+        }
+
         public static PasswordStrength EvaluatePasswordStrength(string password)
         {
             if (string.IsNullOrEmpty(password))
